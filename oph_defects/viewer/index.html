@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OPH defect catalogue</title>
+<style>
+:root{--bg:#090d16;--card:#111a2b;--card2:#0d1422;--edge:#22304d;--text:#e9eef8;--soft:#c2cde2;--muted:#93a3c0;--faint:#62718f;
+--teal:#3fe0d0;--amber:#ffb44a;--violet:#a995ff;--green:#5fe3a1;--red:#ff6480;--gold:#ffd77a}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:15px/1.45 "Helvetica Neue",Helvetica,Arial,sans-serif;overflow:hidden}
+#top{position:absolute;left:0;right:0;top:0;height:60px;display:flex;align-items:center;gap:14px;padding:0 18px;background:linear-gradient(#0d1424,#0a0f1b);border-bottom:1px solid var(--edge);z-index:5}
+#top h1{font-size:18px;margin:0 10px 0 0;font-weight:700;letter-spacing:-.2px}
+#top h1 span{color:var(--amber)}
+#top .meta{color:var(--muted);font-size:13px}
+#top .grow{flex:1}
+button,select{background:var(--card);color:var(--text);border:1px solid var(--edge);border-radius:8px;padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+button.on{border-color:var(--teal);color:var(--teal)}
+button:hover{background:#17233b}
+#stage{position:absolute;left:0;top:60px;right:380px;bottom:150px}
+#gl,#map,#obs{position:absolute;inset:0;width:100%;height:100%}
+#map,#obs{display:none}
+#hint{position:absolute;left:14px;bottom:12px;color:var(--faint);font-size:12.5px;pointer-events:none}
+#side{position:absolute;right:0;top:60px;width:380px;bottom:150px;border-left:1px solid var(--edge);background:var(--card2);overflow:auto;padding:14px 16px}
+#timeline{position:absolute;left:0;right:0;bottom:0;height:150px;border-top:1px solid var(--edge);background:#0b1120;padding:8px 18px 6px}
+#timeline canvas{width:100%;height:100px;display:block}
+#tl-controls{display:flex;align-items:center;gap:12px;height:32px;font-size:13px;color:var(--muted)}
+#tick{flex:1}
+.k{font-size:11.5px;letter-spacing:1.8px;text-transform:uppercase;color:var(--teal);font-weight:700;margin:12px 0 6px}
+.card{background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px solid #16213a;font-size:13.5px}
+.row:last-child{border-bottom:0}
+.row b{color:var(--text);font-weight:600;text-align:right}
+.row span{color:var(--muted)}
+.legend div{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--soft);padding:2px 0}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.ring{width:12px;height:12px;border-radius:50%;display:inline-block;border:2.5px solid;background:transparent}
+#list{font-size:13px}
+#list table{width:100%;border-collapse:collapse}
+#list th{color:var(--faint);font-weight:600;text-align:left;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;padding:4px 2px}
+#list td{padding:4px 2px;border-top:1px solid #16213a;cursor:pointer}
+#list tr:hover td{background:#17233b}
+#list td.c{text-align:right}
+input[type=text]{background:var(--card);border:1px solid var(--edge);color:var(--text);border-radius:8px;padding:6px 9px;font:inherit;font-size:13px;width:100%}
+#about{color:var(--muted);font-size:12.5px}
+#about a{color:#6fb1ff}
+#loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--muted);z-index:4}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<div id="top">
+  <h1>OPH <span>defect</span> catalogue</h1>
+  <span class="meta" id="runmeta">loading…</span>
+  <span class="grow"></span>
+  <button id="view3d" class="on">3D carrier</button>
+  <button id="viewmap">Map</button>
+  <button id="viewobs">Observer</button>
+  <button id="viewbulk" title="the records of all observers glued: direction on the screen, depth = how long ago the record was written">Bulk</button>
+  <select id="obsSel" title="which observer looks" style="display:none"></select>
+  <input type="range" id="yaw" min="-180" max="180" value="0" step="1" style="display:none;width:140px" title="turn the observer">
+  <button id="followBtn" title="keep the camera on the selected defect">Follow</button>
+  <label id="intraLbl" style="display:none;font-size:13px;color:var(--muted);cursor:pointer"><input type="checkbox" id="intraChk"> internal twists</label>
+  <select id="sizeSel" title="defect marker size"><option value="1">small</option><option value="1.6" selected>medium</option><option value="2.6">large</option></select>
+</div>
+<div id="stage">
+  <canvas id="gl"></canvas>
+  <canvas id="map"></canvas>
+  <canvas id="obs"></canvas>
+  <div id="hint">drag to orbit · wheel to zoom · click a defect for its card · space plays · arrows step</div>
+  <div id="loading">loading run…</div>
+</div>
+<div id="side">
+  <div class="k">Selected defect</div>
+  <div class="card" id="selected"><span style="color:var(--faint)">click a defect, or pick one from the list below</span></div>
+  <div class="k" id="recordsK" style="display:none">Records at this observer</div>
+  <div class="card" id="records" style="display:none"></div>
+  <div class="k">Families</div>
+  <div class="card legend" id="legend"></div>
+  <div class="k">Now</div>
+  <div class="card" id="now"></div>
+  <div class="k">Summary</div>
+  <div class="card" id="summary"><span style="color:var(--faint)">loading catalogue…</span></div>
+  <div class="k">Catalogue</div>
+  <div class="card">
+    <input type="text" id="search" placeholder="defect id, or: longest · hops · fusions · alive">
+    <div id="list"></div>
+  </div>
+  <div class="k">About this run</div>
+  <div class="card" id="about"></div>
+</div>
+<div id="timeline">
+  <canvas id="tl"></canvas>
+  <div id="tl-controls">
+    <button id="play">▶ play</button>
+    <input type="range" id="tick" min="0" max="1" value="0" step="1">
+    <span id="ticklabel">tick 0</span>
+    <select id="speed"><option value="1">1×</option><option value="2" selected>2×</option><option value="4">4×</option><option value="8">8×</option></select>
+  </div>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

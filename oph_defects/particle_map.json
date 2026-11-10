@@ -1,0 +1,4312 @@
+{
+ "schema": "oph.viewer.particle_table.v1",
+ "built": "2026-11-10T18:09:12Z",
+ "status": "Candidate labels only. The theory repository identifies no physical particle and derives no mass: physical_particle_map = [] and mass_predictions_GeV = [] in both source files.",
+ "sources": {
+  "repository_commit": "28fca39d1b05d46524b514b7b9383e840b333caf",
+  "repository_dirty": false,
+  "results": {
+   "path": "model/particle_candidate_confirmation/results.json",
+   "sha256": "3b55118a0204b673d7a5520ab63068cff81c0be6a5c105f862d7bbacc8b1c76d",
+   "content_sha256": "7135e5dcc331bc3b99b31a99e41284060e5e145a6ad62fd58a23bed3242aa96b"
+  },
+  "correspondence": {
+   "path": "model/standard_model_source_map/candidates/correspondence.json",
+   "sha256": "d8eb3059031bea372b840151d19c410953da707de0c0b32ddb6c9f39d597aa82"
+  },
+  "physical_particle_map": [],
+  "mass_predictions_GeV": [],
+  "measured_masses": "Particle Data Group 2024 central values, comparison only"
+ },
+ "z6_reading": {
+  "origin": "simulation side, corrected by the theory session on 2026-11-10",
+  "statement": "a flux of class k gives a component of hypercharge label Q6 the phase exp(2 pi i k Q6 / 6). A class is a flux of the centre of the gauge group, not the particle of charge k: class 3 is the weak centre, classes 2 and 4 the colour centre, classes 1 and 5 generate.",
+  "status": "exact as a statement about the centre; the register rule of the runs is declared"
+ },
+ "groups": [
+  {
+   "id": "quark",
+   "label": "Quarks",
+   "color": "#ff7a45",
+   "blurb": "spin 1/2 · three colours · feel the strong force"
+  },
+  {
+   "id": "lepton",
+   "label": "Charged leptons",
+   "color": "#3ee6a8",
+   "blurb": "spin 1/2 · electric charge −1 · no colour"
+  },
+  {
+   "id": "neutrino",
+   "label": "Neutrinos",
+   "color": "#4cc3ff",
+   "blurb": "spin 1/2 · neutral · only the weak force"
+  },
+  {
+   "id": "gluon",
+   "label": "Gluons",
+   "color": "#ff5fb0",
+   "blurb": "spin 1 · carry the strong force · eight colour states"
+  },
+  {
+   "id": "photon",
+   "label": "Photon",
+   "color": "#ffe45c",
+   "blurb": "spin 1 · carries electromagnetism · massless"
+  },
+  {
+   "id": "weak",
+   "label": "W and Z bosons",
+   "color": "#b197ff",
+   "blurb": "spin 1 · carry the weak force · massive"
+  },
+  {
+   "id": "higgs",
+   "label": "Higgs boson",
+   "color": "#f4ead0",
+   "blurb": "spin 0 · gives mass in the Standard Model"
+  }
+ ],
+ "class_style": {
+  "1": {
+   "group": "quark",
+   "color": "#ff7a45",
+   "shape": "disc",
+   "anti": false,
+   "short": "qL",
+   "family": "A",
+   "label": "left-quark-type candidate",
+   "detail": "class 1: colour and weak charge. As a flux: seen by every quark pattern and by the lepton doublet"
+  },
+  "5": {
+   "group": "quark",
+   "color": "#ff7a45",
+   "shape": "ring",
+   "anti": true,
+   "short": "q̄L",
+   "family": "A",
+   "label": "left-antiquark-type candidate",
+   "detail": "class 5, the conjugate of class 1: annihilates with it"
+  },
+  "4": {
+   "group": "quark",
+   "color": "#ffb347",
+   "shape": "disc",
+   "anti": false,
+   "short": "qR",
+   "family": "B",
+   "label": "right-quark-type candidate",
+   "detail": "class 4: colour charge only. As a flux: the centre of the colour group, seen by quark patterns only"
+  },
+  "2": {
+   "group": "quark",
+   "color": "#ffb347",
+   "shape": "ring",
+   "anti": true,
+   "short": "q̄R",
+   "family": "B",
+   "label": "right-antiquark-type candidate",
+   "detail": "class 2, the conjugate of class 4"
+  },
+  "3": {
+   "group": "lepton",
+   "color": "#3ee6a8",
+   "rim": "#4cc3ff",
+   "shape": "duo",
+   "anti": false,
+   "short": "ℓL",
+   "family": "C",
+   "label": "lepton-doublet-type candidate",
+   "detail": "class 3: weak charge only; its own conjugate class; the Higgs has the same class. As a flux: the sign of a link"
+  }
+ },
+ "chart": [
+  {
+   "target": "up",
+   "group": "quark",
+   "row": 1,
+   "column": 1,
+   "symbol": "u",
+   "antisymbol": "ū",
+   "name": "up",
+   "generation": 1,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "triplet: red, green or blue",
+    "baryon number": "1/3",
+    "lepton number": "0",
+    "forces": "strong, electromagnetic, weak, gravity",
+    "chirality": "left-handed part in a weak doublet, right-handed part a weak singlet",
+    "electric charge": "+2/3",
+    "weak isospin T3 (left)": "+1/2",
+    "hypercharge Y (left / right)": "1/6 / 2/3",
+    "lifetime": "stable inside hadrons"
+   },
+   "carrier": "occupation patterns with one or two of the three vector levels filled: (1,1) for the left-handed doublet, (1,2) and (1,0) for the right-handed up and down singlets. A quark pattern sees every flux class of the runs"
+  },
+  {
+   "target": "charm",
+   "group": "quark",
+   "row": 1,
+   "column": 2,
+   "symbol": "c",
+   "antisymbol": "c̄",
+   "name": "charm",
+   "generation": 2,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "triplet: red, green or blue",
+    "baryon number": "1/3",
+    "lepton number": "0",
+    "forces": "strong, electromagnetic, weak, gravity",
+    "chirality": "left-handed part in a weak doublet, right-handed part a weak singlet",
+    "electric charge": "+2/3",
+    "weak isospin T3 (left)": "+1/2",
+    "hypercharge Y (left / right)": "1/6 / 2/3",
+    "lifetime": "decays by the weak force"
+   },
+   "carrier": "occupation patterns with one or two of the three vector levels filled: (1,1) for the left-handed doublet, (1,2) and (1,0) for the right-handed up and down singlets. A quark pattern sees every flux class of the runs"
+  },
+  {
+   "target": "top",
+   "group": "quark",
+   "row": 1,
+   "column": 3,
+   "symbol": "t",
+   "antisymbol": "t̄",
+   "name": "top",
+   "generation": 3,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "triplet: red, green or blue",
+    "baryon number": "1/3",
+    "lepton number": "0",
+    "forces": "strong, electromagnetic, weak, gravity",
+    "chirality": "left-handed part in a weak doublet, right-handed part a weak singlet",
+    "electric charge": "+2/3",
+    "weak isospin T3 (left)": "+1/2",
+    "hypercharge Y (left / right)": "1/6 / 2/3",
+    "lifetime": "about 5 × 10⁻²⁵ s; decays before it can form a hadron"
+   },
+   "carrier": "occupation patterns with one or two of the three vector levels filled: (1,1) for the left-handed doublet, (1,2) and (1,0) for the right-handed up and down singlets. A quark pattern sees every flux class of the runs"
+  },
+  {
+   "target": "down",
+   "group": "quark",
+   "row": 2,
+   "column": 1,
+   "symbol": "d",
+   "antisymbol": "d̄",
+   "name": "down",
+   "generation": 1,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "triplet: red, green or blue",
+    "baryon number": "1/3",
+    "lepton number": "0",
+    "forces": "strong, electromagnetic, weak, gravity",
+    "chirality": "left-handed part in a weak doublet, right-handed part a weak singlet",
+    "electric charge": "−1/3",
+    "weak isospin T3 (left)": "−1/2",
+    "hypercharge Y (left / right)": "1/6 / −1/3",
+    "lifetime": "stable inside nuclei"
+   },
+   "carrier": "occupation patterns with one or two of the three vector levels filled: (1,1) for the left-handed doublet, (1,2) and (1,0) for the right-handed up and down singlets. A quark pattern sees every flux class of the runs"
+  },
+  {
+   "target": "strange",
+   "group": "quark",
+   "row": 2,
+   "column": 2,
+   "symbol": "s",
+   "antisymbol": "s̄",
+   "name": "strange",
+   "generation": 2,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "triplet: red, green or blue",
+    "baryon number": "1/3",
+    "lepton number": "0",
+    "forces": "strong, electromagnetic, weak, gravity",
+    "chirality": "left-handed part in a weak doublet, right-handed part a weak singlet",
+    "electric charge": "−1/3",
+    "weak isospin T3 (left)": "−1/2",
+    "hypercharge Y (left / right)": "1/6 / −1/3",
+    "lifetime": "decays by the weak force"
+   },
+   "carrier": "occupation patterns with one or two of the three vector levels filled: (1,1) for the left-handed doublet, (1,2) and (1,0) for the right-handed up and down singlets. A quark pattern sees every flux class of the runs"
+  },
+  {
+   "target": "bottom",
+   "group": "quark",
+   "row": 2,
+   "column": 3,
+   "symbol": "b",
+   "antisymbol": "b̄",
+   "name": "bottom",
+   "generation": 3,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "triplet: red, green or blue",
+    "baryon number": "1/3",
+    "lepton number": "0",
+    "forces": "strong, electromagnetic, weak, gravity",
+    "chirality": "left-handed part in a weak doublet, right-handed part a weak singlet",
+    "electric charge": "−1/3",
+    "weak isospin T3 (left)": "−1/2",
+    "hypercharge Y (left / right)": "1/6 / −1/3",
+    "lifetime": "decays by the weak force"
+   },
+   "carrier": "occupation patterns with one or two of the three vector levels filled: (1,1) for the left-handed doublet, (1,2) and (1,0) for the right-handed up and down singlets. A quark pattern sees every flux class of the runs"
+  },
+  {
+   "target": "electron",
+   "group": "lepton",
+   "row": 3,
+   "column": 1,
+   "symbol": "e<sup>−</sup>",
+   "antisymbol": "e<sup>+</sup>",
+   "name": "electron",
+   "generation": 1,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "none",
+    "baryon number": "0",
+    "lepton number": "1",
+    "forces": "electromagnetic, weak, gravity",
+    "chirality": "left-handed part in a weak doublet, right-handed part a weak singlet",
+    "electric charge": "−1",
+    "weak isospin T3 (left)": "−1/2",
+    "hypercharge Y (left / right)": "−1/2 / −1",
+    "lifetime": "stable"
+   },
+   "carrier": "pattern (3,1) for the left-handed part, shared with the neutrino, and (3,0) for the right-handed part. The left-handed part sees the flux classes 1, 5 and 3; the right-handed part sees none"
+  },
+  {
+   "target": "muon",
+   "group": "lepton",
+   "row": 3,
+   "column": 2,
+   "symbol": "μ<sup>−</sup>",
+   "antisymbol": "μ<sup>+</sup>",
+   "name": "muon",
+   "generation": 2,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "none",
+    "baryon number": "0",
+    "lepton number": "1",
+    "forces": "electromagnetic, weak, gravity",
+    "chirality": "left-handed part in a weak doublet, right-handed part a weak singlet",
+    "electric charge": "−1",
+    "weak isospin T3 (left)": "−1/2",
+    "hypercharge Y (left / right)": "−1/2 / −1",
+    "lifetime": "2.197 × 10⁻⁶ s"
+   },
+   "carrier": "pattern (3,1) for the left-handed part, shared with the neutrino, and (3,0) for the right-handed part. The left-handed part sees the flux classes 1, 5 and 3; the right-handed part sees none"
+  },
+  {
+   "target": "tau",
+   "group": "lepton",
+   "row": 3,
+   "column": 3,
+   "symbol": "τ<sup>−</sup>",
+   "antisymbol": "τ<sup>+</sup>",
+   "name": "tau",
+   "generation": 3,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "none",
+    "baryon number": "0",
+    "lepton number": "1",
+    "forces": "electromagnetic, weak, gravity",
+    "chirality": "left-handed part in a weak doublet, right-handed part a weak singlet",
+    "electric charge": "−1",
+    "weak isospin T3 (left)": "−1/2",
+    "hypercharge Y (left / right)": "−1/2 / −1",
+    "lifetime": "2.90 × 10⁻¹³ s"
+   },
+   "carrier": "pattern (3,1) for the left-handed part, shared with the neutrino, and (3,0) for the right-handed part. The left-handed part sees the flux classes 1, 5 and 3; the right-handed part sees none"
+  },
+  {
+   "target": "electron_neutrino",
+   "group": "neutrino",
+   "row": 4,
+   "column": 1,
+   "symbol": "ν<sub>e</sub>",
+   "antisymbol": "ν̄<sub>e</sub>",
+   "name": "electron neutrino",
+   "generation": 1,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "none",
+    "baryon number": "0",
+    "lepton number": "1",
+    "forces": "weak, gravity",
+    "chirality": "only left-handed neutrinos and right-handed antineutrinos are observed",
+    "mass": "oscillations require nonzero mass-squared differences; a flavour state is not a mass eigenstate",
+    "electric charge": "0",
+    "weak isospin T3 (left)": "+1/2",
+    "hypercharge Y (left)": "−1/2",
+    "lifetime": "stable"
+   },
+   "carrier": "pattern (3,1), the neutral member of the left-handed lepton doublet. A right-handed partner would be (3,2), charge 0, which no flux sees"
+  },
+  {
+   "target": "muon_neutrino",
+   "group": "neutrino",
+   "row": 4,
+   "column": 2,
+   "symbol": "ν<sub>μ</sub>",
+   "antisymbol": "ν̄<sub>μ</sub>",
+   "name": "muon neutrino",
+   "generation": 2,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "none",
+    "baryon number": "0",
+    "lepton number": "1",
+    "forces": "weak, gravity",
+    "chirality": "only left-handed neutrinos and right-handed antineutrinos are observed",
+    "mass": "oscillations require nonzero mass-squared differences; a flavour state is not a mass eigenstate",
+    "electric charge": "0",
+    "weak isospin T3 (left)": "+1/2",
+    "hypercharge Y (left)": "−1/2",
+    "lifetime": "stable"
+   },
+   "carrier": "pattern (3,1), the neutral member of the left-handed lepton doublet. A right-handed partner would be (3,2), charge 0, which no flux sees"
+  },
+  {
+   "target": "tau_neutrino",
+   "group": "neutrino",
+   "row": 4,
+   "column": 3,
+   "symbol": "ν<sub>τ</sub>",
+   "antisymbol": "ν̄<sub>τ</sub>",
+   "name": "tau neutrino",
+   "generation": 3,
+   "properties": {
+    "spin": "1/2",
+    "statistics": "fermion",
+    "colour": "none",
+    "baryon number": "0",
+    "lepton number": "1",
+    "forces": "weak, gravity",
+    "chirality": "only left-handed neutrinos and right-handed antineutrinos are observed",
+    "mass": "oscillations require nonzero mass-squared differences; a flavour state is not a mass eigenstate",
+    "electric charge": "0",
+    "weak isospin T3 (left)": "+1/2",
+    "hypercharge Y (left)": "−1/2",
+    "lifetime": "stable"
+   },
+   "carrier": "pattern (3,1), the neutral member of the left-handed lepton doublet. A right-handed partner would be (3,2), charge 0, which no flux sees"
+  },
+  {
+   "target": "gluon",
+   "group": "gluon",
+   "row": 1,
+   "column": 4,
+   "symbol": "g",
+   "antisymbol": "g",
+   "name": "gluon",
+   "generation": 0,
+   "properties": {
+    "spin": "1",
+    "statistics": "boson",
+    "electric charge": "0",
+    "colour": "octet: eight colour states",
+    "forces": "carries the strong force and feels it",
+    "helicity states": "2",
+    "antiparticle": "its own, as a set of eight",
+    "lifetime": "never free: confined"
+   },
+   "carrier": "no pattern: the eight traceless port responses on the three vector levels. Not a defect"
+  },
+  {
+   "target": "photon",
+   "group": "photon",
+   "row": 2,
+   "column": 4,
+   "symbol": "γ",
+   "antisymbol": "γ",
+   "name": "photon",
+   "generation": 0,
+   "properties": {
+    "spin": "1",
+    "statistics": "boson",
+    "electric charge": "0",
+    "colour": "none",
+    "parity": "−",
+    "forces": "carries electromagnetism",
+    "helicity states": "2",
+    "antiparticle": "its own",
+    "lifetime": "stable"
+   },
+   "carrier": "no pattern: a combination of the conserved charge and the diagonal response on the two spinor levels. A wave, not a defect"
+  },
+  {
+   "target": "Z",
+   "group": "weak",
+   "row": 3,
+   "column": 4,
+   "symbol": "Z",
+   "antisymbol": "Z",
+   "name": "Z boson",
+   "generation": 0,
+   "properties": {
+    "spin": "1",
+    "statistics": "boson",
+    "electric charge": "0",
+    "colour": "none",
+    "forces": "carries the neutral weak force",
+    "polarisation states": "3",
+    "antiparticle": "its own",
+    "width": "2.4955 GeV",
+    "lifetime": "about 3 × 10⁻²⁵ s"
+   },
+   "carrier": "no pattern: the responses on the two spinor levels, off-diagonal for the W, diagonal for the Z. No massive vector is assigned"
+  },
+  {
+   "target": "W_plus",
+   "group": "weak",
+   "row": 4,
+   "column": 4,
+   "symbol": "W<sup>+</sup>",
+   "antisymbol": "W<sup>−</sup>",
+   "name": "W boson",
+   "generation": 0,
+   "properties": {
+    "spin": "1",
+    "statistics": "boson",
+    "electric charge": "+1",
+    "colour": "none",
+    "forces": "carries the charged weak force; couples to left-handed particles only",
+    "polarisation states": "3",
+    "width": "2.085 GeV",
+    "lifetime": "about 3 × 10⁻²⁵ s"
+   },
+   "carrier": "no pattern: the responses on the two spinor levels, off-diagonal for the W, diagonal for the Z. No massive vector is assigned"
+  },
+  {
+   "target": "W_minus",
+   "group": "weak",
+   "row": 4,
+   "column": 4,
+   "symbol": "W<sup>−</sup>",
+   "antisymbol": "W<sup>+</sup>",
+   "name": "W boson",
+   "generation": 0,
+   "properties": {
+    "spin": "1",
+    "statistics": "boson",
+    "electric charge": "−1",
+    "colour": "none",
+    "forces": "carries the charged weak force; couples to left-handed particles only",
+    "polarisation states": "3",
+    "width": "2.085 GeV",
+    "lifetime": "about 3 × 10⁻²⁵ s"
+   },
+   "carrier": "no pattern: the responses on the two spinor levels, off-diagonal for the W, diagonal for the Z. No massive vector is assigned"
+  },
+  {
+   "target": "Higgs",
+   "group": "higgs",
+   "row": 1,
+   "column": 5,
+   "symbol": "H",
+   "antisymbol": "H",
+   "name": "Higgs boson",
+   "generation": 0,
+   "properties": {
+    "spin": "0",
+    "statistics": "boson",
+    "electric charge": "0",
+    "colour": "none",
+    "parity": "+",
+    "weak isospin": "member of a doublet with hypercharge 1/2",
+    "antiparticle": "its own",
+    "width": "about 4 MeV (Standard Model value)",
+    "lifetime": "about 1.6 × 10⁻²² s"
+   },
+   "carrier": "no pattern: the operator that adds or removes one quantum on the spinor levels. It changes the charge by 3 and links each left-handed pattern to its right-handed partners: (1,1) with (1,2) and (1,0), (3,1) with (3,0) and (3,2). A mass term sits on these links. Declared, no value"
+  }
+ ],
+ "mass_status": {
+  "statement": "No rest mass is derived from the source yet. The measured values are comparison targets.",
+  "register_cost": {
+   "table": {
+    "1": 5,
+    "5": 5,
+    "2": 8,
+    "4": 8,
+    "3": 10
+   },
+   "note": "declared cost of a defect of each class in the register of these runs, in cost units; five cost units are paid by one unit of released load potential. Declared, not derived."
+  },
+  "wave_bands": {
+   "wiring": "symmetric wiring of the federation (three glued ports per carrier)",
+   "massless_c_squared": 0.014204545392210062,
+   "moving_bands": [
+    {
+     "level": 0.3999442453035006,
+     "curvature_over_massless": -1.4105550431415181
+    },
+    {
+     "level": 2.8081965424780626,
+     "curvature_over_massless": 1.620447311984286
+    },
+    {
+     "level": 3.26794919243112,
+     "curvature_over_massless": -1.138119504438738
+    },
+    {
+     "level": 6.265768709949472,
+     "curvature_over_massless": 0.971910804994037
+    },
+    {
+     "level": 6.7320508075688785,
+     "curvature_over_massless": -2.061880338100126
+    },
+    {
+     "level": 8.000000000000004,
+     "curvature_over_massless": 2.1999995664057126
+    },
+    {
+     "level": 8.52609050226896,
+     "curvature_over_massless": -1.181803133433577
+    }
+   ],
+   "immobile_levels": [
+    2.763932,
+    3.267949,
+    6.0,
+    6.732051,
+    7.236068,
+    8.0
+   ],
+   "crossing": {
+    "q": [
+     2.0943951023931953,
+     3.6275987284684357
+    ],
+    "two_lowest_levels": [
+     0.18300468924737912,
+     0.18300468924738356
+    ],
+    "gap": 4.440892098500626e-15,
+    "linear_slope_of_lambda_by_direction": [
+     0.05697798603593318,
+     0.056969763752079405,
+     0.05696154028145273,
+     0.056969763752134917
+    ],
+    "top_of_lower_band": 0.15583367996717395,
+    "bottom_of_upper_band": 0.21081474758465402
+   },
+   "note": "levels of the port operator at zero wave number. On a continuous flow with pulse rate nu a band has rest frequency nu sqrt(level); it shares the cone of the massless band only if its curvature equals that of the massless band. No band is assigned to a particle."
+  },
+  "transverse_bands": {
+   "massless_c_squared": 0.29729722218352256,
+   "moving_bands": [
+    {
+     "level": 1.0989686820924252,
+     "curvature_over_massless": 0.268638954352401
+    },
+    {
+     "level": 2.70597661304115,
+     "curvature_over_massless": -0.0012167698713167697
+    },
+    {
+     "level": 3.8296672279432267,
+     "curvature_over_massless": 0.6365515629423959
+    },
+    {
+     "level": 5.111741964580203,
+     "curvature_over_massless": 0.019148830635793333
+    },
+    {
+     "level": 15.253645512343002,
+     "curvature_over_massless": 3.1223328955971192
+    }
+   ],
+   "immobile_levels": [
+    0.763932,
+    2.0,
+    3.0,
+    5.0,
+    5.236068
+   ],
+   "note": "seam and face modes of the symmetric wiring; they have no load component. The plaquette boundary inside a carrier is a declared choice."
+  },
+  "cone_wirings": [
+   {
+    "up": [
+     2,
+     2,
+     2
+    ],
+    "down": [
+     2,
+     2,
+     2
+    ],
+    "massless_c_squared": 0.01420454367546582,
+    "half_gap": 4.440892098500626e-16,
+    "level": 0.18300468924737778,
+    "slope": 0.056996368272934035
+   },
+   {
+    "up": [
+     1,
+     1,
+     1
+    ],
+    "down": [
+     1,
+     1,
+     1
+    ],
+    "massless_c_squared": 0.015243903624417424,
+    "half_gap": 4.121702978920894e-15,
+    "level": 0.1760349141912929,
+    "slope": 0.04870622833039138
+   },
+   {
+    "up": [
+     1,
+     1,
+     2
+    ],
+    "down": [
+     1,
+     2,
+     2
+    ],
+    "massless_c_squared": 0.014705880696111985,
+    "half_gap": 0.003465991922727618,
+    "level": 0.17978527676647627,
+    "slope": 0.05279413084392018
+   },
+   {
+    "up": [
+     1,
+     2,
+     2
+    ],
+    "down": [
+     1,
+     1,
+     2
+    ],
+    "massless_c_squared": 0.014705882291575994,
+    "half_gap": 0.003465991922728534,
+    "level": 0.179785276753478,
+    "slope": 0.05279353435999213
+   },
+   {
+    "up": [
+     1,
+     1,
+     1
+    ],
+    "down": [
+     2,
+     2,
+     2
+    ],
+    "massless_c_squared": 0.014705882759746249,
+    "half_gap": 0.010494375036524728,
+    "level": 0.1801074091382051,
+    "slope": 0.05273293283783895
+   },
+   {
+    "up": [
+     2,
+     2,
+     2
+    ],
+    "down": [
+     1,
+     1,
+     1
+    ],
+    "massless_c_squared": 0.014705882885529743,
+    "half_gap": 0.010494375036527476,
+    "level": 0.18010740913820822,
+    "slope": 0.05273289921715285
+   }
+  ],
+  "flux_gaps": {
+   "scalar_curvature": 0.01420452351292638,
+   "rows": [
+    {
+     "sector": "spinor doublet, port frame",
+     "level": 0.7467459582397992,
+     "branches": 2,
+     "flat_branches": 1,
+     "moving_curvature": [
+      0.013887349828989315
+     ]
+    },
+    {
+     "sector": "spinor doublet, conjugate frame",
+     "level": 2.3713444394043313,
+     "branches": 2,
+     "flat_branches": 1,
+     "moving_curvature": [
+      0.009954457338423595
+     ]
+    },
+    {
+     "sector": "vector triplet",
+     "level": 1.3819660112501042,
+     "branches": 3,
+     "flat_branches": 3,
+     "moving_curvature": []
+    }
+   ],
+   "note": "Lowest levels of the recharted port operator on the flat federation with one glue port per neighbour, in units of the kernel (relaxation rate times 2M). The level is the flux gap of one carrier and does not depend on the size of the federation. Flat branches do not move. Under the coherent walk a level becomes a frequency; the length scale of this gap is 0.14 mesh edges, a gap at the cutoff. Not assigned to a particle."
+  },
+  "family_walk": {
+   "gluings": [
+    {
+     "gluing": "one glue port per neighbour",
+     "addresses": 66,
+     "massless_speed": 0.02074705056929417,
+     "rows": [
+      {
+       "sector": "spinor",
+       "rest_phase": 0.15057046852654632,
+       "flat": true,
+       "speed_ratio": null,
+       "compton_edges": null,
+       "shell_up_to_q": null
+      },
+      {
+       "sector": "spinor",
+       "rest_phase": 0.15057046852654707,
+       "flat": false,
+       "speed_ratio": 0.9906436973338548,
+       "compton_edges": 0.13650043787380756,
+       "shell_up_to_q": 0.5
+      },
+      {
+       "sector": "spinor",
+       "rest_phase": 0.17857630247621342,
+       "flat": false,
+       "speed_ratio": -0.5211324753084735,
+       "compton_edges": 0.060545333667475346,
+       "shell_up_to_q": null
+      },
+      {
+       "sector": "vector",
+       "rest_phase": 0.2049993293496836,
+       "flat": true,
+       "speed_ratio": null,
+       "compton_edges": null,
+       "shell_up_to_q": null
+      },
+      {
+       "sector": "vector",
+       "rest_phase": 0.2049993293496836,
+       "flat": true,
+       "speed_ratio": null,
+       "compton_edges": null,
+       "shell_up_to_q": null
+      },
+      {
+       "sector": "vector",
+       "rest_phase": 0.2049993293496836,
+       "flat": true,
+       "speed_ratio": null,
+       "compton_edges": null,
+       "shell_up_to_q": null
+      },
+      {
+       "sector": "vector",
+       "rest_phase": 0.2173604804506618,
+       "flat": false,
+       "speed_ratio": 0.9063228619459326,
+       "compton_edges": 0.0865084867769597,
+       "shell_up_to_q": 0.5
+      }
+     ]
+    },
+    {
+     "gluing": "a shared seam per neighbour, common frame",
+     "addresses": 72,
+     "massless_speed": 0.03127437800492294,
+     "rows": [
+      {
+       "sector": "spinor",
+       "rest_phase": 0.14452651641369405,
+       "flat": false,
+       "speed_ratio": 0.9609349660791788,
+       "compton_edges": 0.20793861301745542,
+       "shell_up_to_q": 0.1
+      },
+      {
+       "sector": "spinor",
+       "rest_phase": 0.14770754647559758,
+       "flat": false,
+       "speed_ratio": 0.945290223192621,
+       "compton_edges": 0.20014795770348875,
+       "shell_up_to_q": 0.1
+      },
+      {
+       "sector": "spinor",
+       "rest_phase": 0.1535635798232467,
+       "flat": false,
+       "speed_ratio": -0.30397745203872967,
+       "compton_edges": 0.061907294366117825,
+       "shell_up_to_q": null
+      },
+      {
+       "sector": "vector",
+       "rest_phase": 0.19683330733458868,
+       "flat": false,
+       "speed_ratio": -0.9688866404633257,
+       "compton_edges": 0.15394410350613053,
+       "shell_up_to_q": null
+      },
+      {
+       "sector": "vector",
+       "rest_phase": 0.19720800632729166,
+       "flat": false,
+       "speed_ratio": -0.24373041250867228,
+       "compton_edges": 0.038652168307211035,
+       "shell_up_to_q": null
+      },
+      {
+       "sector": "vector",
+       "rest_phase": 0.19773102045724192,
+       "flat": false,
+       "speed_ratio": 1.4791244512758333,
+       "compton_edges": 0.23394759759269934,
+       "shell_up_to_q": 0.05
+      },
+      {
+       "sector": "vector",
+       "rest_phase": 0.20221892346294298,
+       "flat": false,
+       "speed_ratio": 1.1351946875047834,
+       "compton_edges": 0.17556471549860106,
+       "shell_up_to_q": 0.1
+      }
+     ]
+    }
+   ],
+   "note": "A declared extension of the public walk to the federation: the quantum uses the address register of the carrier that holds it. Its phases follow exactly from the bands of the recharted port operator. Rest phases are in radians per walk step, speeds in mesh edges per walk step. A branch with a rest phase and the speed of the massless branch has the form of a mass shell in this clock. The rest phases sit at the cutoff: the Compton lengths are a fraction of one mesh edge. Not assigned to a particle."
+  },
+  "coherent_walk": {
+   "program": "coherent-seam-repair-v1",
+   "dimension": 1440,
+   "levels": [
+    {
+     "name": "singlet",
+     "states": 1,
+     "kernel": 1.0,
+     "frequency": 0.0
+    },
+    {
+     "name": "slow triplet",
+     "states": 3,
+     "kernel": 0.9539344662916631,
+     "frequency": 0.3047084373702735
+    },
+    {
+     "name": "quintet",
+     "states": 5,
+     "kernel": 0.9,
+     "frequency": 0.45102681179626236
+    },
+    {
+     "name": "fast triplet",
+     "states": 3,
+     "kernel": 0.8793988670416701,
+     "frequency": 0.4961982595020731
+    }
+   ],
+   "two_step_return": "643/900",
+   "committed_two_step_return": "101/120",
+   "reference_success": "131/810",
+   "fibre": {
+    "dimension": 7200,
+    "charge": [
+     -2,
+     -2,
+     -2,
+     3,
+     3
+    ],
+    "central_link_amplitude_change": "-1/6750"
+   },
+   "note": "Public program of the audit in the theory repository (model/coherent_seam_repair). The removed seam disagreement is kept in a coherent record and the seam address is reflected; the step is unitary and every relaxation factor of the reference rule becomes a frequency, in radians per walk step. One carrier only. A frequency of a finite carrier is not a rest mass."
+  },
+  "integer_filling": {
+   "rest_cost": 0.5,
+   "pair_release": 1.0,
+   "note": "on a whole-number background a raised port and a lowered port are particle and antiparticle of the bare law; each costs one half of the mismatch potential and a pair annihilates with release exactly 1 (measured: 192,528 of 192,528 pairs at level 6)."
+  }
+ },
+ "sectors": [
+  {
+   "n3": 0,
+   "n2": 0,
+   "states": 1,
+   "six_Y": 0,
+   "z6_class": 0,
+   "handedness": "left",
+   "colour": "singlet",
+   "weak": "singlet",
+   "multiplet": "conjugate of the right-handed neutrino",
+   "group": "neutrino",
+   "targets": [],
+   "conjugate": [
+    3,
+    2
+   ]
+  },
+  {
+   "n3": 1,
+   "n2": 0,
+   "states": 3,
+   "six_Y": -2,
+   "z6_class": 4,
+   "handedness": "right",
+   "colour": "triplet",
+   "weak": "singlet",
+   "multiplet": "down-type quark, right-handed",
+   "group": "quark",
+   "targets": [
+    "down",
+    "strange",
+    "bottom"
+   ],
+   "conjugate": [
+    2,
+    2
+   ]
+  },
+  {
+   "n3": 2,
+   "n2": 0,
+   "states": 3,
+   "six_Y": -4,
+   "z6_class": 2,
+   "handedness": "left",
+   "colour": "antitriplet",
+   "weak": "singlet",
+   "multiplet": "up-type antiquark",
+   "group": "quark",
+   "targets": [
+    "up",
+    "charm",
+    "top"
+   ],
+   "conjugate": [
+    1,
+    2
+   ]
+  },
+  {
+   "n3": 3,
+   "n2": 0,
+   "states": 1,
+   "six_Y": -6,
+   "z6_class": 0,
+   "handedness": "right",
+   "colour": "singlet",
+   "weak": "singlet",
+   "multiplet": "charged lepton, right-handed",
+   "group": "lepton",
+   "targets": [
+    "electron",
+    "muon",
+    "tau"
+   ],
+   "conjugate": [
+    0,
+    2
+   ]
+  },
+  {
+   "n3": 0,
+   "n2": 1,
+   "states": 2,
+   "six_Y": 3,
+   "z6_class": 3,
+   "handedness": "right",
+   "colour": "singlet",
+   "weak": "doublet",
+   "multiplet": "antilepton doublet",
+   "group": "lepton",
+   "targets": [],
+   "conjugate": [
+    3,
+    1
+   ]
+  },
+  {
+   "n3": 1,
+   "n2": 1,
+   "states": 6,
+   "six_Y": 1,
+   "z6_class": 1,
+   "handedness": "left",
+   "colour": "triplet",
+   "weak": "doublet",
+   "multiplet": "quark doublet, left-handed",
+   "group": "quark",
+   "targets": [
+    "up",
+    "down",
+    "charm",
+    "strange",
+    "top",
+    "bottom"
+   ],
+   "conjugate": [
+    2,
+    1
+   ]
+  },
+  {
+   "n3": 2,
+   "n2": 1,
+   "states": 6,
+   "six_Y": -1,
+   "z6_class": 5,
+   "handedness": "right",
+   "colour": "antitriplet",
+   "weak": "doublet",
+   "multiplet": "antiquark doublet",
+   "group": "quark",
+   "targets": [],
+   "conjugate": [
+    1,
+    1
+   ]
+  },
+  {
+   "n3": 3,
+   "n2": 1,
+   "states": 2,
+   "six_Y": -3,
+   "z6_class": 3,
+   "handedness": "left",
+   "colour": "singlet",
+   "weak": "doublet",
+   "multiplet": "lepton doublet, left-handed",
+   "group": "lepton",
+   "targets": [
+    "electron",
+    "muon",
+    "tau",
+    "electron_neutrino",
+    "muon_neutrino",
+    "tau_neutrino"
+   ],
+   "conjugate": [
+    0,
+    1
+   ]
+  },
+  {
+   "n3": 0,
+   "n2": 2,
+   "states": 1,
+   "six_Y": 6,
+   "z6_class": 0,
+   "handedness": "left",
+   "colour": "singlet",
+   "weak": "singlet",
+   "multiplet": "charged antilepton",
+   "group": "lepton",
+   "targets": [],
+   "conjugate": [
+    3,
+    0
+   ]
+  },
+  {
+   "n3": 1,
+   "n2": 2,
+   "states": 3,
+   "six_Y": 4,
+   "z6_class": 4,
+   "handedness": "right",
+   "colour": "triplet",
+   "weak": "singlet",
+   "multiplet": "up-type quark, right-handed",
+   "group": "quark",
+   "targets": [
+    "up",
+    "charm",
+    "top"
+   ],
+   "conjugate": [
+    2,
+    0
+   ]
+  },
+  {
+   "n3": 2,
+   "n2": 2,
+   "states": 3,
+   "six_Y": 2,
+   "z6_class": 2,
+   "handedness": "left",
+   "colour": "antitriplet",
+   "weak": "singlet",
+   "multiplet": "down-type antiquark",
+   "group": "quark",
+   "targets": [],
+   "conjugate": [
+    1,
+    0
+   ]
+  },
+  {
+   "n3": 3,
+   "n2": 2,
+   "states": 1,
+   "six_Y": 0,
+   "z6_class": 0,
+   "handedness": "right",
+   "colour": "singlet",
+   "weak": "singlet",
+   "multiplet": "right-handed neutrino",
+   "group": "neutrino",
+   "targets": [],
+   "conjugate": [
+    0,
+    0
+   ]
+  }
+ ],
+ "target_sectors": {
+  "up": [
+   {
+    "pattern": [
+     1,
+     1
+    ],
+    "role": "left-handed part, upper member of the quark doublet"
+   },
+   {
+    "pattern": [
+     1,
+     2
+    ],
+    "role": "right-handed part"
+   }
+  ],
+  "charm": [
+   {
+    "pattern": [
+     1,
+     1
+    ],
+    "role": "left-handed part, upper member of the quark doublet"
+   },
+   {
+    "pattern": [
+     1,
+     2
+    ],
+    "role": "right-handed part"
+   }
+  ],
+  "top": [
+   {
+    "pattern": [
+     1,
+     1
+    ],
+    "role": "left-handed part, upper member of the quark doublet"
+   },
+   {
+    "pattern": [
+     1,
+     2
+    ],
+    "role": "right-handed part"
+   }
+  ],
+  "down": [
+   {
+    "pattern": [
+     1,
+     1
+    ],
+    "role": "left-handed part, lower member of the quark doublet"
+   },
+   {
+    "pattern": [
+     1,
+     0
+    ],
+    "role": "right-handed part"
+   }
+  ],
+  "strange": [
+   {
+    "pattern": [
+     1,
+     1
+    ],
+    "role": "left-handed part, lower member of the quark doublet"
+   },
+   {
+    "pattern": [
+     1,
+     0
+    ],
+    "role": "right-handed part"
+   }
+  ],
+  "bottom": [
+   {
+    "pattern": [
+     1,
+     1
+    ],
+    "role": "left-handed part, lower member of the quark doublet"
+   },
+   {
+    "pattern": [
+     1,
+     0
+    ],
+    "role": "right-handed part"
+   }
+  ],
+  "electron": [
+   {
+    "pattern": [
+     3,
+     1
+    ],
+    "role": "left-handed part, lower member of the lepton doublet"
+   },
+   {
+    "pattern": [
+     3,
+     0
+    ],
+    "role": "right-handed part"
+   }
+  ],
+  "muon": [
+   {
+    "pattern": [
+     3,
+     1
+    ],
+    "role": "left-handed part, lower member of the lepton doublet"
+   },
+   {
+    "pattern": [
+     3,
+     0
+    ],
+    "role": "right-handed part"
+   }
+  ],
+  "tau": [
+   {
+    "pattern": [
+     3,
+     1
+    ],
+    "role": "left-handed part, lower member of the lepton doublet"
+   },
+   {
+    "pattern": [
+     3,
+     0
+    ],
+    "role": "right-handed part"
+   }
+  ],
+  "electron_neutrino": [
+   {
+    "pattern": [
+     3,
+     1
+    ],
+    "role": "left-handed, upper member of the lepton doublet"
+   },
+   {
+    "pattern": [
+     3,
+     2
+    ],
+    "role": "right-handed partner, not observed"
+   }
+  ],
+  "muon_neutrino": [
+   {
+    "pattern": [
+     3,
+     1
+    ],
+    "role": "left-handed, upper member of the lepton doublet"
+   },
+   {
+    "pattern": [
+     3,
+     2
+    ],
+    "role": "right-handed partner, not observed"
+   }
+  ],
+  "tau_neutrino": [
+   {
+    "pattern": [
+     3,
+     1
+    ],
+    "role": "left-handed, upper member of the lepton doublet"
+   },
+   {
+    "pattern": [
+     3,
+     2
+    ],
+    "role": "right-handed partner, not observed"
+   }
+  ],
+  "Higgs": [],
+  "gluon": [],
+  "photon": [],
+  "Z": [],
+  "W_plus": [],
+  "W_minus": []
+ },
+ "response_of": {
+  "Higgs": "the operator that adds or removes one quantum on the spinor levels; it changes n2 by one and the charge by 3",
+  "gluon": "the eight traceless port responses on the three vector levels",
+  "photon": "the combination of the charge diag(2,2,2,-3,-3) and the diagonal response on the spinor levels that leaves the vacuum pattern alone",
+  "Z": "the other combination of the charge and the diagonal response on the spinor levels",
+  "W_plus": "the raising response on the two spinor levels",
+  "W_minus": "the lowering response on the two spinor levels"
+ },
+ "internal_modes": {
+  "levels": [
+   {
+    "id": "v1",
+    "kind": "vector",
+    "charge": -2
+   },
+   {
+    "id": "v2",
+    "kind": "vector",
+    "charge": -2
+   },
+   {
+    "id": "v3",
+    "kind": "vector",
+    "charge": -2
+   },
+   {
+    "id": "s1",
+    "kind": "spinor",
+    "charge": 3
+   },
+   {
+    "id": "s2",
+    "kind": "spinor",
+    "charge": 3
+   }
+  ],
+  "statement": "Five internal levels of a carrier: three vector levels and two spinor levels. A multiplet is an occupation pattern (n3, n2). Its charge 3 n2 - 2 n3 is six times the hypercharge, and the parity of n3 + n2 is the handedness. The charge modulo 6 decides which centre fluxes the pattern sees. The twelve patterns are one generation of the Standard Model and its conjugate. Generations are not separated by the pattern.",
+  "origin": "The vector triplet is the consensus space of vector agreement on pairs of faces, the spinor doublet that of spinor agreement on faces (repair-law search, 10 November). The public program coherent-seam-repair-v1 carries exactly this five-level factor on its walk and conserves the charge. The port loads compressed to it generate u(1) + su(2) + su(3).",
+  "checks": "On each of the two handedness classes the four anomaly sums vanish, and the sum of T3 squared over the sum of electric charge squared is 3/8. The sum of the twelve port responses is the charge itself, diag(2,2,2,-3,-3). Which class is called matter is a convention: nothing supplies chirality yet.",
+  "higgs": "The Higgs is not a pattern. It is the operator that adds or removes one spinor-level quantum, so it links each left-handed pattern to its right-handed partners: (1,1) with (1,2) and (1,0), (3,1) with (3,0) and (3,2). A mass term sits on these links. Of the five such operators exactly one conserves colour and electric charge, the one on the neutral spinor level. So one amplitude gives one common mass to up type, down type, charged lepton and neutrino: separate masses and three generations need structure beyond one occupation algebra. Declared, no value. The gauge fields are the twelve port responses and leave the pattern unchanged.",
+  "fluxes": "The defects of the big runs are not patterns. A register class k is a flux of the centre of the gauge group: a pattern of charge Q sees it as the phase exp(2 pi i k Q / 6). Class 3 is the central minus one of the weak group, seen by patterns with one spinor level filled; classes 2 and 4 are the centre of the colour group, seen by patterns with one or two vector levels filled; classes 1 and 5 generate.",
+  "status": "A labelling, revised best guess. No pattern is an identified particle and no mass follows from it.",
+  "splits": "An earlier version of this page read flux class k as the particle of charge k. That is a duality between fluxes and charges which the construction does not supply; particle names now sit on patterns only."
+ },
+ "yukawa_links": [
+  {
+   "left": [
+    1,
+    1
+   ],
+   "right": [
+    1,
+    2
+   ],
+   "what": "up-type quarks"
+  },
+  {
+   "left": [
+    1,
+    1
+   ],
+   "right": [
+    1,
+    0
+   ],
+   "what": "down-type quarks"
+  },
+  {
+   "left": [
+    3,
+    1
+   ],
+   "right": [
+    3,
+    0
+   ],
+   "what": "charged leptons"
+  },
+  {
+   "left": [
+    3,
+    1
+   ],
+   "right": [
+    3,
+    2
+   ],
+   "what": "neutrinos"
+  }
+ ],
+ "levels": [
+  {
+   "id": "v1",
+   "kind": "vector",
+   "label": "vector level 1",
+   "colour": "red",
+   "electric": "-1/3",
+   "six_Y": -2
+  },
+  {
+   "id": "v2",
+   "kind": "vector",
+   "label": "vector level 2",
+   "colour": "green",
+   "electric": "-1/3",
+   "six_Y": -2
+  },
+  {
+   "id": "v3",
+   "kind": "vector",
+   "label": "vector level 3",
+   "colour": "blue",
+   "electric": "-1/3",
+   "six_Y": -2
+  },
+  {
+   "id": "s1",
+   "kind": "spinor",
+   "label": "spinor level 1, charged",
+   "T3": "+1/2",
+   "electric": "+1",
+   "six_Y": 3
+  },
+  {
+   "id": "s2",
+   "kind": "spinor",
+   "label": "spinor level 2, neutral",
+   "T3": "-1/2",
+   "electric": "0",
+   "six_Y": 3
+  }
+ ],
+ "state_names": {
+  "0,0": {
+   "*": [
+    "ν̄",
+    "antineutrino, left-handed singlet (conjugate of a right-handed neutrino)",
+    "neutrino"
+   ]
+  },
+  "1,0": {
+   "*": [
+    "d",
+    "down quark, right-handed",
+    "quark"
+   ]
+  },
+  "2,0": {
+   "*": [
+    "ū",
+    "up antiquark, left-handed",
+    "quark"
+   ]
+  },
+  "3,0": {
+   "*": [
+    "e⁻",
+    "electron, right-handed",
+    "lepton"
+   ]
+  },
+  "0,1": {
+   "s1": [
+    "e⁺",
+    "positron, right-handed",
+    "lepton"
+   ],
+   "s2": [
+    "ν̄",
+    "antineutrino, right-handed",
+    "neutrino"
+   ]
+  },
+  "1,1": {
+   "s1": [
+    "u",
+    "up quark, left-handed",
+    "quark"
+   ],
+   "s2": [
+    "d",
+    "down quark, left-handed",
+    "quark"
+   ]
+  },
+  "2,1": {
+   "s1": [
+    "d̄",
+    "down antiquark, right-handed",
+    "quark"
+   ],
+   "s2": [
+    "ū",
+    "up antiquark, right-handed",
+    "quark"
+   ]
+  },
+  "3,1": {
+   "s1": [
+    "ν",
+    "neutrino, left-handed",
+    "neutrino"
+   ],
+   "s2": [
+    "e⁻",
+    "electron, left-handed",
+    "lepton"
+   ]
+  },
+  "0,2": {
+   "*": [
+    "e⁺",
+    "positron, left-handed",
+    "lepton"
+   ]
+  },
+  "1,2": {
+   "*": [
+    "u",
+    "up quark, right-handed",
+    "quark"
+   ]
+  },
+  "2,2": {
+   "*": [
+    "d̄",
+    "down antiquark, left-handed",
+    "quark"
+   ]
+  },
+  "3,2": {
+   "*": [
+    "ν",
+    "neutrino, right-handed",
+    "neutrino"
+   ]
+  }
+ },
+ "model_objects": [
+  {
+   "object": "vector-type quantum (wave channels 0 to 2)",
+   "best_guess": "the colour index of matter: one vector level filled is the right-handed down quark",
+   "in_model": "executed: three identical wave channels of the public walk, blind to the central link",
+   "confirmed": "conserved charge −2 per level; no response to a weak-centre flux",
+   "missing": "the three copies have identical spectra; colour forces and a mass",
+   "status": "labelled only",
+   "group": "quark"
+  },
+  {
+   "object": "spinor-type quantum (wave channels 3 and 4)",
+   "best_guess": "the weak doublet index of matter: one spinor level filled is the antilepton doublet",
+   "in_model": "executed: two identical wave channels of the public walk, sensitive to the central link",
+   "confirmed": "conserved charge +3 per level; sign change at a flipped link; moves the flux and is changed by it",
+   "missing": "physical spin and chirality; a two-level register is not weak isospin yet",
+   "status": "labelled only",
+   "group": "lepton"
+  },
+  {
+   "object": "occupation patterns of the five levels",
+   "best_guess": "one generation of quarks and leptons and its conjugate: twelve patterns, 32 states",
+   "in_model": "executed as an occupation lift with a shared link register (audit, species package); the patterns themselves are representation labels",
+   "confirmed": "charges, anomaly sums zero, sum T3² / sum Q² = 3/8",
+   "missing": "a map to propagating one-fermion fields; a dynamics that keeps a pattern together",
+   "status": "labelled only",
+   "group": "quark"
+  },
+  {
+   "object": "regional flux of the link register",
+   "best_guess": "a flux of the weak centre (class 3 of the big runs), not a matter particle",
+   "in_model": "executed: thirty link bits, protected with a held boundary, moved by the wave",
+   "confirmed": "boundary sign −1, five positions, exact two-way interaction with the spinor type",
+   "missing": "its dispersion, statistics and rotation law; protection without a held boundary",
+   "status": "protected relative to a boundary",
+   "group": "weak"
+  },
+  {
+   "object": "the twelve port responses",
+   "best_guess": "the gauge fields: eight on the vector levels (gluons), three on the spinor levels (W and the neutral weak field), one central (hypercharge)",
+   "in_model": "exact algebra; executed as port pulses on the internal factor and as the encoded controller of the audit",
+   "confirmed": "dimension 12, centre 1, every carrier rotation is a word of at most six pulses",
+   "missing": "dynamics of the fields themselves; the responses must be the complete response of the law",
+   "status": "algebra only",
+   "group": "gluon"
+  },
+  {
+   "object": "the operator on the neutral spinor level",
+   "best_guess": "the Higgs: the one operator that conserves colour and electric charge and links left-handed to right-handed patterns",
+   "in_model": "representation only; the audit lists the three permitted mass channels",
+   "confirmed": "one amplitude gives one common mass to all four links",
+   "missing": "a value; separate masses and three generations need more structure",
+   "status": "declared, no value",
+   "group": "higgs"
+  },
+  {
+   "object": "the load wave",
+   "best_guess": "no particle: the massless carrier of the conserved load",
+   "in_model": "executed at every scale: committed rule (diffusion) and coherent walk (massless branch)",
+   "confirmed": "massless; speed 0.0207 mesh edges per step on the flat family, 0.0962 lattice constants per tick on the cubic family",
+   "missing": "a spin; a relation to the photon would need a transverse structure",
+   "status": "no particle name",
+   "group": "photon"
+  },
+  {
+   "object": "the conjugate triplet of the carrier (unused by the five levels)",
+   "best_guess": "the space of three generations",
+   "in_model": "representation only",
+   "confirmed": "a port and a cubic frame are mismatched by the golden-ratio pattern: squared overlaps 0.276, 1/2 and 0",
+   "missing": "a dynamics that selects a port for one sector and a frame for another; a breaking that splits three identical levels",
+   "status": "candidate, not blind",
+   "group": "neutrino"
+  }
+ ],
+ "generations": {
+  "statement": "Three generations are not in the five levels. The best candidate so far is the second triplet of the carrier, which the five levels do not use. If it were the generation space, one kind of mass would be diagonal along a port and the other along a cubic frame of the carrier, and the two bases are mismatched by a fixed pattern.",
+  "mixing": [
+   {
+    "angle": "θ12",
+    "model": 0.276393,
+    "model_exact": "(5 − √5)/10",
+    "measured": "about 0.31"
+   },
+   {
+    "angle": "θ23",
+    "model": 0.5,
+    "model_exact": "1/2",
+    "measured": "0.45 to 0.57"
+   },
+   {
+    "angle": "θ13",
+    "model": 0.0,
+    "model_exact": "0",
+    "measured": "about 0.022"
+   }
+  ],
+  "caveats": "Squared sines of the lepton mixing angles. The comparison is not blind: the measured values were known when it was made. The third angle is zero in the pattern and is not zero in nature. Three identical levels have equal spectra, so they cannot be three particles of different mass without a breaking that nothing supplies yet. Found by the theory session.",
+  "status": "candidate; no generation is derived"
+ },
+ "defect_map": {
+  "status": "best guess by structure; not a derivation",
+  "rule": "A register class k of Z6 is the pair (k mod 3, k mod 2): a colour-centre charge and a weak-centre parity. The known multiplets carry exactly these pairs: quark doublets (1 or 2, odd), quark singlets (1 or 2, even), lepton doublets (0, odd), lepton singlets (0, even).",
+  "constraint": "The classes on the twenty faces of a carrier sum to zero. So a colour charge never sits alone on a carrier: only pairs and triples without net charge occur. In nature this is the rule that quarks come in mesons and baryons.",
+  "kinds": [
+   {
+    "id": "qd",
+    "classes": [
+     1,
+     5
+    ],
+    "name": "generating flux",
+    "long": "colour-centre and weak-centre flux together",
+    "group": "quark",
+    "colour": "yes",
+    "weak": "yes",
+    "guess": "left-handed quarks (the quark doublet and its antiparticle)",
+    "run": [
+     "0.050 per carrier at 300 sweeps, falling",
+     "wanders by diffusion, never in a straight line; on a carrier it stays on that carrier",
+     "every step is to the left of the local load flow for class 1 and to the right for class 5: equal and opposite sideways drift, like opposite charges",
+     "ends by fusion with its own kind into class 2 or 4, or by meeting its antiparticle: the population halves every 75 sweeps"
+    ],
+    "law": "needs a declared link register of order six",
+    "free_path": 10.391816142923233
+   },
+   {
+    "id": "qs",
+    "classes": [
+     2,
+     4
+    ],
+    "name": "colour-centre flux",
+    "long": "flux of the centre of the colour group",
+    "group": "quark",
+    "colour": "yes",
+    "weak": "no",
+    "guess": "right-handed quarks and their antiparticles",
+    "run": [
+     "0.268 pairs per carrier, the same at every size",
+     "never alone: only in groups without net colour charge",
+     "made when two of class 1 or two of class 5 fuse; frozen once its faces are not neighbours",
+     "never moves to another carrier"
+    ],
+    "law": "needs a declared link register of order six",
+    "free_path": 11.98205289548797
+   },
+   {
+    "id": "ld",
+    "classes": [
+     3
+    ],
+    "name": "weak-centre flux",
+    "long": "the sign of a link, its own conjugate",
+    "group": "lepton",
+    "colour": "no",
+    "weak": "yes",
+    "guess": "left-handed leptons, and the Higgs doublet",
+    "run": [
+     "0.041 pairs per carrier; 9.1 percent of the carriers hold flux of this kind when the register is read modulo 2",
+     "comes in pairs, made from the mixed triples",
+     "frozen once made",
+     "the Higgs doublet has the same class: the register cannot tell the two apart"
+    ],
+    "law": "the one flux of the working law: the sign of a link",
+    "free_path": 122.8534315138004
+   },
+   {
+    "id": "ls",
+    "classes": [
+     0
+    ],
+    "name": "flat face",
+    "long": "no flux",
+    "group": "neutrino",
+    "colour": "no",
+    "weak": "no",
+    "guess": "right-handed electron and neutrino",
+    "run": [
+     "carries no register class: a flat face",
+     "invisible to the defect register",
+     "in the coherent model: the four patterns that see no centre flux of any class"
+    ],
+    "law": "no flux",
+    "free_path": null
+   }
+  ],
+  "groups": [
+   {
+    "set": "{2, 4}",
+    "carriers": 4991967,
+    "share": 0.6916,
+    "name": "a colour charge and its opposite",
+    "reading": "the charge content of a meson",
+    "group": "quark"
+   },
+   {
+    "set": "{1, 5}",
+    "carriers": 1041883,
+    "share": 0.1443,
+    "name": "a generating flux and its opposite",
+    "reading": "the charge content of a left-handed quark and its antiparticle; still annihilating",
+    "group": "quark"
+   },
+   {
+    "set": "{3, 3}",
+    "carriers": 785555,
+    "share": 0.1088,
+    "name": "two weak-centre fluxes",
+    "reading": "the charge content of a lepton and an antilepton",
+    "group": "lepton"
+   },
+   {
+    "set": "{2, 2, 4, 4}",
+    "carriers": 139090,
+    "share": 0.0193,
+    "name": "two colour pairs",
+    "reading": "two neutral pairs on one carrier",
+    "group": "quark"
+   },
+   {
+    "set": "{2, 2, 2}",
+    "carriers": 86788,
+    "share": 0.012,
+    "name": "three antiquark colour charges",
+    "reading": "the centre classes of an antibaryon, three antiquarks; as a flux content it is a boson",
+    "group": "gluon"
+   },
+   {
+    "set": "{4, 4, 4}",
+    "carriers": 86476,
+    "share": 0.012,
+    "name": "three quark colour charges",
+    "reading": "the centre classes of a baryon, three quarks; as a flux content it is a boson, so it is not itself a baryon",
+    "group": "gluon"
+   },
+   {
+    "set": "{2, 3, 3, 4}",
+    "carriers": 55690,
+    "share": 0.0077,
+    "name": "a colour pair and a weak pair",
+    "reading": "two neutral groups on one carrier",
+    "group": "lepton"
+   },
+   {
+    "set": "{1, 2, 3} and {3, 4, 5}",
+    "carriers": 22351,
+    "share": 0.0031,
+    "name": "mixed triple",
+    "reading": "a left-handed quark, a right-handed quark and an object of class 3: the charges that meet where the Higgs gives a quark its mass",
+    "group": "weak"
+   }
+  ],
+  "carriers": 20971520,
+  "empty_share": 0.6558,
+  "balance": "Baryon-like and antibaryon-like groups: 86,476 against 86,788 at level 10. Over levels 5 to 10 the two differ by 0.13 ± 0.21 percent. They are made through mirror channels at equal rates and sit at random, without clustering. The run has no excess of matter over antimatter.",
+  "fusion": "All 11.5 million fusions and splits in the stored runs obey addition modulo 6, without one exception, and the tables are the same for a class and its conjugate. Content never moves from one carrier to another.",
+  "hadron_gas": "For orientation: in a hot gas of hadrons at the temperature where quarks bind, protons and neutrons are a few percent of the pions. In the run the baryon-like groups are 1.7 percent of the meson-like groups.",
+  "reactions": [
+   [
+    "pair births",
+    1496469,
+    "a defect and its conjugate appear together"
+   ],
+   [
+    "annihilations",
+    613096,
+    "a defect meets its conjugate"
+   ],
+   [
+    "fusions",
+    2821014,
+    "two classes add to one"
+   ],
+   [
+    "splits",
+    1551599,
+    "one class breaks into two"
+   ],
+   [
+    "exchanges",
+    1881003,
+    "two defects trade class"
+   ],
+   [
+    "moves",
+    30732639,
+    "a defect steps to a neighbouring face"
+   ]
+  ],
+  "h2": {
+   "plaquettes_per_carrier": {
+    "Z3": 0.25947627314814814,
+    "Z2": 0.038872612847222224
+   },
+   "note": "Routing of each kind of quantum through a static gas of link flux with the densities of the frozen classes, 96 x 48 x 48 carriers. Mean free path of the ballistic packet, relative to a free quantum.",
+   "composite": "A point object made of three quark quanta has no colour-centre charge. It reads the links exactly as a lepton doublet does and gets as far. A quark and an antiquark held apart are lost at twice the single rate in this gas, and at 0.6 to 0.8 of it in a gas of long flux lines: the arrangement of the flux matters and is not derived."
+  },
+  "dark": {
+   "name": "the travelling flux pair",
+   "guess": "dark matter",
+   "facts": [
+    "a complete flux pair moves from carrier to carrier (audit, public program)",
+    "it carries no gauge charge: its five positions are gauge singlets",
+    "rest energy 2 source units under a declared mass rule",
+    "the cosmology papers name unrecovered collar charge as the dark part"
+   ]
+  },
+  "tower": {
+   "name": "internal sectors of a carrier",
+   "guess": "heavy partners at the scale of the lattice, not known particles",
+   "angles": [
+    [
+     "uniform load, blank record",
+     0.0
+    ],
+    [
+     "slow triplet",
+     0.304708
+    ],
+    [
+     "quintet, recorded",
+     0.367208
+    ],
+    [
+     "quintet, blank",
+     0.451027
+    ],
+    [
+     "fast triplet",
+     0.496198
+    ],
+    [
+     "uniform load, recorded",
+     0.585686
+    ]
+   ]
+  },
+  "mass": [
+   "The native idle interaction vanishes on the fifteen-state internal module. That alone supplies neither propagating massless particles nor an interacting mass spectrum.",
+   "A Higgs-type quantum memory permits invariant Yukawa couplings. This is one declared mass-generating mechanism; its interacting reference and physical parameters require calculation.",
+   "The frozen flux of the run is such a state. Read as a background it gives quarks about three times the rest phase of leptons and leaves the right-handed electron at zero. It was set by how the run was prepared: loads seeded from 0 to 5 leave 0.268 pairs per carrier, loads from 0 to 3 leave 0.008, and a start inside the settled band leaves none."
+  ]
+ },
+ "families": [
+  {
+   "id": "A",
+   "label": "Family A: centre flux 1 and its conjugate 5 · they generate the centre",
+   "classes": [
+    1,
+    5
+   ],
+   "color": "#ff7a45",
+   "note": "classes 1 and 5 are conjugates; a pair is born from two flat faces and annihilates on contact. Seen by every quark pattern and every weak doublet"
+  },
+  {
+   "id": "B",
+   "label": "Family B: colour-centre flux 2 and its conjugate 4",
+   "classes": [
+    2,
+    4
+   ],
+   "color": "#ffb347",
+   "note": "classes 2 and 4 are conjugates; produced directly by a contrast of 4 or 5, or by fusion of two class-1 fluxes. Seen by quark patterns only"
+  },
+  {
+   "id": "C",
+   "label": "Family C: weak-centre flux 3",
+   "classes": [
+    3
+   ],
+   "color": "#3ee6a8",
+   "note": "class 3 is its own conjugate; produced directly by a contrast of 5, or by fusion of classes 1 and 2. Seen by weak doublets only"
+  }
+ ],
+ "classes": [
+  {
+   "z6_class": 0,
+   "conjugate_class": 0,
+   "family": null,
+   "short": "",
+   "multiplets": [
+    "e^c"
+   ],
+   "conjugate_multiplets": [
+    "e^c"
+   ],
+   "components": [
+    "charged_lepton_right_conjugate"
+   ],
+   "targets": [
+    "electron",
+    "muon",
+    "tau"
+   ],
+   "visible_to": [],
+   "invisible_to": [
+    "Q_L",
+    "u^c",
+    "d^c",
+    "L_L",
+    "e^c"
+   ],
+   "reading": "flat face: carries no flux"
+  },
+  {
+   "z6_class": 1,
+   "conjugate_class": 5,
+   "family": "A",
+   "short": "Φ1",
+   "multiplets": [
+    "Q_L"
+   ],
+   "conjugate_multiplets": [],
+   "components": [
+    "up_left",
+    "down_left"
+   ],
+   "targets": [
+    "bottom",
+    "charm",
+    "down",
+    "strange",
+    "top",
+    "up"
+   ],
+   "visible_to": [
+    "Q_L",
+    "u^c",
+    "d^c",
+    "L_L"
+   ],
+   "invisible_to": [
+    "e^c"
+   ],
+   "reading": "A flux of the centre of the gauge group. Patterns that see it: Q_L, u^c, d^c, L_L. Patterns that do not: e^c"
+  },
+  {
+   "z6_class": 2,
+   "conjugate_class": 4,
+   "family": "B",
+   "short": "Φ2",
+   "multiplets": [
+    "u^c",
+    "d^c"
+   ],
+   "conjugate_multiplets": [],
+   "components": [
+    "up_right_conjugate",
+    "down_right_conjugate"
+   ],
+   "targets": [
+    "bottom",
+    "charm",
+    "down",
+    "strange",
+    "top",
+    "up"
+   ],
+   "visible_to": [
+    "Q_L",
+    "u^c",
+    "d^c"
+   ],
+   "invisible_to": [
+    "L_L",
+    "e^c"
+   ],
+   "reading": "A flux of the centre of the gauge group. Patterns that see it: Q_L, u^c, d^c. Patterns that do not: L_L, e^c"
+  },
+  {
+   "z6_class": 3,
+   "conjugate_class": 3,
+   "family": "C",
+   "short": "Φ3",
+   "multiplets": [
+    "L_L"
+   ],
+   "conjugate_multiplets": [
+    "L_L"
+   ],
+   "components": [
+    "neutrino_left",
+    "charged_lepton_left"
+   ],
+   "targets": [
+    "electron",
+    "electron_neutrino",
+    "muon",
+    "muon_neutrino",
+    "tau",
+    "tau_neutrino"
+   ],
+   "visible_to": [
+    "Q_L",
+    "L_L"
+   ],
+   "invisible_to": [
+    "u^c",
+    "d^c",
+    "e^c"
+   ],
+   "reading": "A flux of the centre of the gauge group. Patterns that see it: Q_L, L_L. Patterns that do not: u^c, d^c, e^c"
+  },
+  {
+   "z6_class": 4,
+   "conjugate_class": 2,
+   "family": "B",
+   "short": "Φ4",
+   "multiplets": [],
+   "conjugate_multiplets": [
+    "u^c",
+    "d^c"
+   ],
+   "components": [],
+   "targets": [],
+   "visible_to": [
+    "Q_L",
+    "u^c",
+    "d^c"
+   ],
+   "invisible_to": [
+    "L_L",
+    "e^c"
+   ],
+   "reading": "A flux of the centre of the gauge group. Patterns that see it: Q_L, u^c, d^c. Patterns that do not: L_L, e^c"
+  },
+  {
+   "z6_class": 5,
+   "conjugate_class": 1,
+   "family": "A",
+   "short": "Φ5",
+   "multiplets": [],
+   "conjugate_multiplets": [
+    "Q_L"
+   ],
+   "components": [],
+   "targets": [],
+   "visible_to": [
+    "Q_L",
+    "u^c",
+    "d^c",
+    "L_L"
+   ],
+   "invisible_to": [
+    "e^c"
+   ],
+   "reading": "A flux of the centre of the gauge group. Patterns that see it: Q_L, u^c, d^c, L_L. Patterns that do not: e^c"
+  }
+ ],
+ "multiplets": [
+  {
+   "label": "Q_L",
+   "description": "quark doublet Q_L (up and down type, left)",
+   "SU3": "3",
+   "SU2_dimension": 2,
+   "Y": "1/6",
+   "Q6": "1",
+   "T3": [
+    "1/2",
+    "-1/2"
+   ],
+   "Q": [
+    "2/3",
+    "-1/3"
+   ],
+   "component_ids": [
+    "up_left",
+    "down_left"
+   ],
+   "convention": "all-left Weyl comparison; physical chirality not proved",
+   "z6_class": 1,
+   "z6_class_conjugate": 5
+  },
+  {
+   "label": "u^c",
+   "description": "up-type antiquark singlet u^c",
+   "SU3": "3bar",
+   "SU2_dimension": 1,
+   "Y": "-2/3",
+   "Q6": "-4",
+   "T3": [
+    "0"
+   ],
+   "Q": [
+    "-2/3"
+   ],
+   "component_ids": [
+    "up_right_conjugate"
+   ],
+   "convention": "all-left Weyl comparison; physical chirality not proved",
+   "z6_class": 2,
+   "z6_class_conjugate": 4
+  },
+  {
+   "label": "d^c",
+   "description": "down-type antiquark singlet d^c",
+   "SU3": "3bar",
+   "SU2_dimension": 1,
+   "Y": "1/3",
+   "Q6": "2",
+   "T3": [
+    "0"
+   ],
+   "Q": [
+    "1/3"
+   ],
+   "component_ids": [
+    "down_right_conjugate"
+   ],
+   "convention": "all-left Weyl comparison; physical chirality not proved",
+   "z6_class": 2,
+   "z6_class_conjugate": 4
+  },
+  {
+   "label": "L_L",
+   "description": "lepton doublet L_L (neutrino and charged lepton, left)",
+   "SU3": "1",
+   "SU2_dimension": 2,
+   "Y": "-1/2",
+   "Q6": "-3",
+   "T3": [
+    "1/2",
+    "-1/2"
+   ],
+   "Q": [
+    "0",
+    "-1"
+   ],
+   "component_ids": [
+    "neutrino_left",
+    "charged_lepton_left"
+   ],
+   "convention": "all-left Weyl comparison; physical chirality not proved",
+   "z6_class": 3,
+   "z6_class_conjugate": 3
+  },
+  {
+   "label": "e^c",
+   "description": "charged antilepton singlet e^c",
+   "SU3": "1",
+   "SU2_dimension": 1,
+   "Y": "1",
+   "Q6": "6",
+   "T3": [
+    "0"
+   ],
+   "Q": [
+    "1"
+   ],
+   "component_ids": [
+    "charged_lepton_right_conjugate"
+   ],
+   "convention": "all-left Weyl comparison; physical chirality not proved",
+   "z6_class": 0,
+   "z6_class_conjugate": 0
+  }
+ ],
+ "targets": [
+  {
+   "target": "electron",
+   "theory_family": "charged_leptons",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "e+ (positron)",
+    "charge": "−1",
+    "color": "singlet",
+    "spin": "1/2",
+    "symbol": "e−"
+   },
+   "best_guess": "charged-lepton family components; no e/mu/tau assignment",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "charged_lepton_left",
+    "charged_lepton_right_conjugate"
+   ],
+   "source_multiplets": [
+    "L_L",
+    "e^c"
+   ],
+   "actual_primary_excitation_ids": [
+    "particle_primary_regional_fermion:regional_endpoint_irrep"
+   ],
+   "source_test_summary": "A Higgs-conjugate composite gives a charged weak/color-singlet dressing with positive original dressed records at three endpoint separations and an admitted canonical energy/momentum kernel; its populated particle branch and flavor are unproved.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [
+    "model/particle_candidate_charged_propagation/results.json",
+    "model/particle_candidate_endpoint_threshold/results.json"
+   ],
+   "finite_source_evidence": "A charged source spinor and its scalar dressing have complete compensated pair-energy records. Flavor labels are unassigned.",
+   "required_response": "Resolve a charged energy-momentum threshold while retaining the opposite endpoint and flux; their total energy cannot be divided by two to define a lepton mass.",
+   "required_interactions": null,
+   "required_mass": "Specify the charged infrared threshold or resonance convention; distinguish stable electron and unstable muon/tau readouts.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Resolve a charged energy-momentum threshold while retaining the opposite endpoint and flux; their total energy cannot be divided by two to define a lepton mass.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Identify electromagnetic and weak current responses and three distinct source flavor channels. Test conjugate records and allowed decays.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Specify the charged infrared threshold or resonance convention; distinguish stable electron and unstable muon/tau readouts.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    0,
+    3
+   ],
+   "measured_mass_GeV": 0.00051099895,
+   "measured_mass_note": null
+  },
+  {
+   "target": "muon",
+   "theory_family": "charged_leptons",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "μ+",
+    "charge": "−1",
+    "color": "singlet",
+    "spin": "1/2",
+    "symbol": "μ−"
+   },
+   "best_guess": "charged-lepton family components; no e/mu/tau assignment",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "charged_lepton_left",
+    "charged_lepton_right_conjugate"
+   ],
+   "source_multiplets": [
+    "L_L",
+    "e^c"
+   ],
+   "actual_primary_excitation_ids": [
+    "particle_primary_regional_fermion:regional_endpoint_irrep"
+   ],
+   "source_test_summary": "A Higgs-conjugate composite gives a charged weak/color-singlet dressing with positive original dressed records at three endpoint separations and an admitted canonical energy/momentum kernel; its populated particle branch and flavor are unproved.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [
+    "model/particle_candidate_charged_propagation/results.json",
+    "model/particle_candidate_endpoint_threshold/results.json"
+   ],
+   "finite_source_evidence": "A charged source spinor and its scalar dressing have complete compensated pair-energy records. Flavor labels are unassigned.",
+   "required_response": "Resolve a charged energy-momentum threshold while retaining the opposite endpoint and flux; their total energy cannot be divided by two to define a lepton mass.",
+   "required_interactions": null,
+   "required_mass": "Specify the charged infrared threshold or resonance convention; distinguish stable electron and unstable muon/tau readouts.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Resolve a charged energy-momentum threshold while retaining the opposite endpoint and flux; their total energy cannot be divided by two to define a lepton mass.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Identify electromagnetic and weak current responses and three distinct source flavor channels. Test conjugate records and allowed decays.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Specify the charged infrared threshold or resonance convention; distinguish stable electron and unstable muon/tau readouts.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    0,
+    3
+   ],
+   "measured_mass_GeV": 0.1056583755,
+   "measured_mass_note": null
+  },
+  {
+   "target": "tau",
+   "theory_family": "charged_leptons",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "τ+",
+    "charge": "−1",
+    "color": "singlet",
+    "spin": "1/2",
+    "symbol": "τ−"
+   },
+   "best_guess": "charged-lepton family components; no e/mu/tau assignment",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "charged_lepton_left",
+    "charged_lepton_right_conjugate"
+   ],
+   "source_multiplets": [
+    "L_L",
+    "e^c"
+   ],
+   "actual_primary_excitation_ids": [
+    "particle_primary_regional_fermion:regional_endpoint_irrep"
+   ],
+   "source_test_summary": "A Higgs-conjugate composite gives a charged weak/color-singlet dressing with positive original dressed records at three endpoint separations and an admitted canonical energy/momentum kernel; its populated particle branch and flavor are unproved.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [
+    "model/particle_candidate_charged_propagation/results.json",
+    "model/particle_candidate_endpoint_threshold/results.json"
+   ],
+   "finite_source_evidence": "A charged source spinor and its scalar dressing have complete compensated pair-energy records. Flavor labels are unassigned.",
+   "required_response": "Resolve a charged energy-momentum threshold while retaining the opposite endpoint and flux; their total energy cannot be divided by two to define a lepton mass.",
+   "required_interactions": null,
+   "required_mass": "Specify the charged infrared threshold or resonance convention; distinguish stable electron and unstable muon/tau readouts.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Resolve a charged energy-momentum threshold while retaining the opposite endpoint and flux; their total energy cannot be divided by two to define a lepton mass.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Identify electromagnetic and weak current responses and three distinct source flavor channels. Test conjugate records and allowed decays.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Specify the charged infrared threshold or resonance convention; distinguish stable electron and unstable muon/tau readouts.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    0,
+    3
+   ],
+   "measured_mass_GeV": 1.77693,
+   "measured_mass_note": null
+  },
+  {
+   "target": "up",
+   "theory_family": "up_type_quarks",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "anti-u: −2/3, conjugate 3",
+    "charge": "+2/3",
+    "color": "3",
+    "spin": "1/2",
+    "symbol": "u"
+   },
+   "best_guess": "up-type quark family components; no generation assignment",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "up_left",
+    "up_right_conjugate"
+   ],
+   "source_multiplets": [
+    "Q_L",
+    "u^c"
+   ],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "Exact native quark representations have no onsite generation multiplicity; a common bare Yukawa attachment is constrained by native charges.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [],
+   "finite_source_evidence": "Exact up-type internal weights exist, with one local copy per native representation.",
+   "required_response": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+   "required_interactions": null,
+   "required_mass": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; an isolated colored rest-energy pole is not required.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Test non-Abelian color and weak vertices, three distinct up-type flavors and charged-current mixing with the down-type channels.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; an isolated colored rest-energy pole is not required.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    1,
+    2
+   ],
+   "measured_mass_GeV": 0.00216,
+   "measured_mass_note": "MS-bar at 2 GeV"
+  },
+  {
+   "target": "charm",
+   "theory_family": "up_type_quarks",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "anti-c: −2/3, conjugate 3",
+    "charge": "+2/3",
+    "color": "3",
+    "spin": "1/2",
+    "symbol": "c"
+   },
+   "best_guess": "up-type quark family components; no generation assignment",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "up_left",
+    "up_right_conjugate"
+   ],
+   "source_multiplets": [
+    "Q_L",
+    "u^c"
+   ],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "Exact native quark representations have no onsite generation multiplicity; a common bare Yukawa attachment is constrained by native charges.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [],
+   "finite_source_evidence": "Exact up-type internal weights exist, with one local copy per native representation.",
+   "required_response": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+   "required_interactions": null,
+   "required_mass": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; an isolated colored rest-energy pole is not required.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Test non-Abelian color and weak vertices, three distinct up-type flavors and charged-current mixing with the down-type channels.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; an isolated colored rest-energy pole is not required.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    1,
+    2
+   ],
+   "measured_mass_GeV": 1.273,
+   "measured_mass_note": "MS-bar at its own scale"
+  },
+  {
+   "target": "top",
+   "theory_family": "up_type_quarks",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "anti-t: −2/3, conjugate 3",
+    "charge": "+2/3",
+    "color": "3",
+    "spin": "1/2",
+    "symbol": "t"
+   },
+   "best_guess": "up-type quark family components; no generation assignment",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "up_left",
+    "up_right_conjugate"
+   ],
+   "source_multiplets": [
+    "Q_L",
+    "u^c"
+   ],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "Exact native quark representations have no onsite generation multiplicity; a common bare Yukawa attachment is constrained by native charges.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [],
+   "finite_source_evidence": "Exact up-type internal weights exist, with one local copy per native representation.",
+   "required_response": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+   "required_interactions": null,
+   "required_mass": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; an isolated colored rest-energy pole is not required.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Test non-Abelian color and weak vertices, three distinct up-type flavors and charged-current mixing with the down-type channels.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; an isolated colored rest-energy pole is not required.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    1,
+    2
+   ],
+   "measured_mass_GeV": 172.57,
+   "measured_mass_note": "direct measurements"
+  },
+  {
+   "target": "down",
+   "theory_family": "down_type_quarks",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "anti-d: +1/3, conjugate 3",
+    "charge": "−1/3",
+    "color": "3",
+    "spin": "1/2",
+    "symbol": "d"
+   },
+   "best_guess": "down-type quark family components; no generation assignment",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "down_left",
+    "down_right_conjugate"
+   ],
+   "source_multiplets": [
+    "Q_L",
+    "d^c"
+   ],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "Exact native quark representations have no onsite generation multiplicity; a common bare Yukawa attachment is constrained by native charges.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [],
+   "finite_source_evidence": "Exact down-type internal weights exist, with one local copy per native representation.",
+   "required_response": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+   "required_interactions": null,
+   "required_mass": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; finite neutral sector bottoms are different observables.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Test non-Abelian color and weak vertices, three distinct down-type flavors and charged-current mixing with the up-type channels.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; finite neutral sector bottoms are different observables.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    1,
+    2
+   ],
+   "measured_mass_GeV": 0.0047,
+   "measured_mass_note": "MS-bar at 2 GeV"
+  },
+  {
+   "target": "strange",
+   "theory_family": "down_type_quarks",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "anti-s: +1/3, conjugate 3",
+    "charge": "−1/3",
+    "color": "3",
+    "spin": "1/2",
+    "symbol": "s"
+   },
+   "best_guess": "down-type quark family components; no generation assignment",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "down_left",
+    "down_right_conjugate"
+   ],
+   "source_multiplets": [
+    "Q_L",
+    "d^c"
+   ],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "Exact native quark representations have no onsite generation multiplicity; a common bare Yukawa attachment is constrained by native charges.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [],
+   "finite_source_evidence": "Exact down-type internal weights exist, with one local copy per native representation.",
+   "required_response": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+   "required_interactions": null,
+   "required_mass": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; finite neutral sector bottoms are different observables.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Test non-Abelian color and weak vertices, three distinct down-type flavors and charged-current mixing with the up-type channels.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; finite neutral sector bottoms are different observables.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    1,
+    2
+   ],
+   "measured_mass_GeV": 0.0935,
+   "measured_mass_note": "MS-bar at 2 GeV"
+  },
+  {
+   "target": "bottom",
+   "theory_family": "down_type_quarks",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "anti-b: +1/3, conjugate 3",
+    "charge": "−1/3",
+    "color": "3",
+    "spin": "1/2",
+    "symbol": "b"
+   },
+   "best_guess": "down-type quark family components; no generation assignment",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "down_left",
+    "down_right_conjugate"
+   ],
+   "source_multiplets": [
+    "Q_L",
+    "d^c"
+   ],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "Exact native quark representations have no onsite generation multiplicity; a common bare Yukawa attachment is constrained by native charges.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [],
+   "finite_source_evidence": "Exact down-type internal weights exist, with one local copy per native representation.",
+   "required_response": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+   "required_interactions": null,
+   "required_mass": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; finite neutral sector bottoms are different observables.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct color-dressed, gauge-invariant production/current records in a specified effective dictionary.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Test non-Abelian color and weak vertices, three distinct down-type flavors and charged-current mixing with the up-type channels.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Calculate renormalized quark masses in a declared scheme and scale with controlled physical matching; finite neutral sector bottoms are different observables.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    1,
+    2
+   ],
+   "measured_mass_GeV": 4.183,
+   "measured_mass_note": "MS-bar at its own scale"
+  },
+  {
+   "target": "electron_neutrino",
+   "theory_family": "active_neutrinos",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "Antineutrino channel; Dirac/Majorana choice explicit",
+    "charge": "0",
+    "color": "singlet",
+    "spin": "1/2",
+    "symbol": "νe"
+   },
+   "best_guess": "active-neutrino-type component of the native lepton doublet; flavor and mass mixing unresolved",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "neutrino_left"
+   ],
+   "source_multiplets": [
+    "L_L"
+   ],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "The native weak doublet differs from the tested neutral singlet trion; a direct current-preserving identification fails.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [
+    "model/particle_candidate_composites/results.json",
+    "model/particle_candidate_composite_spectrum/results.json",
+    "model/particle_candidate_neutral_dispersion/results.json"
+   ],
+   "finite_source_evidence": "The internal weak-doublet neutral component exists. The tested neutral singlet trion has different unbroken weak-current transformations.",
+   "required_response": "Construct a populated neutral weak-current channel and its energy-momentum response; a singlet composite name does not supply it.",
+   "required_interactions": null,
+   "required_mass": "Extract mass eigenvalues or controlled splittings and the mixing matrix; flavor names are not mass eigenstates.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct a populated neutral weak-current channel and its energy-momentum response; a singlet composite name does not supply it.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Derive the production/detection flavor dictionary, mass eigenchannels and oscillation probabilities. Specify the neutrino operator and test its lepton-number consequences.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Extract mass eigenvalues or controlled splittings and the mixing matrix; flavor names are not mass eigenstates.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    3
+   ],
+   "measured_mass_GeV": null,
+   "measured_mass_note": "flavour state, no single mass; kinematic bound below 0.8 eV"
+  },
+  {
+   "target": "muon_neutrino",
+   "theory_family": "active_neutrinos",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "Antineutrino channel; Dirac/Majorana choice explicit",
+    "charge": "0",
+    "color": "singlet",
+    "spin": "1/2",
+    "symbol": "νμ"
+   },
+   "best_guess": "active-neutrino-type component of the native lepton doublet; flavor and mass mixing unresolved",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "neutrino_left"
+   ],
+   "source_multiplets": [
+    "L_L"
+   ],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "The native weak doublet differs from the tested neutral singlet trion; a direct current-preserving identification fails.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [
+    "model/particle_candidate_composites/results.json",
+    "model/particle_candidate_composite_spectrum/results.json",
+    "model/particle_candidate_neutral_dispersion/results.json"
+   ],
+   "finite_source_evidence": "The internal weak-doublet neutral component exists. The tested neutral singlet trion has different unbroken weak-current transformations.",
+   "required_response": "Construct a populated neutral weak-current channel and its energy-momentum response; a singlet composite name does not supply it.",
+   "required_interactions": null,
+   "required_mass": "Extract mass eigenvalues or controlled splittings and the mixing matrix; flavor names are not mass eigenstates.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct a populated neutral weak-current channel and its energy-momentum response; a singlet composite name does not supply it.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Derive the production/detection flavor dictionary, mass eigenchannels and oscillation probabilities. Specify the neutrino operator and test its lepton-number consequences.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Extract mass eigenvalues or controlled splittings and the mixing matrix; flavor names are not mass eigenstates.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    3
+   ],
+   "measured_mass_GeV": null,
+   "measured_mass_note": "flavour state, no single mass"
+  },
+  {
+   "target": "tau_neutrino",
+   "theory_family": "active_neutrinos",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "Antineutrino channel; Dirac/Majorana choice explicit",
+    "charge": "0",
+    "color": "singlet",
+    "spin": "1/2",
+    "symbol": "ντ"
+   },
+   "best_guess": "active-neutrino-type component of the native lepton doublet; flavor and mass mixing unresolved",
+   "comparison_status": "possible",
+   "missing": [
+    "physical chiral current and Lorentz-spin dictionary",
+    "one common interacting dressed particle/threshold or resonance sector",
+    "source-derived flavor and mass mixing",
+    "dispersion and quantitative complete detector matching"
+   ],
+   "source_component_ids": [
+    "neutrino_left"
+   ],
+   "source_multiplets": [
+    "L_L"
+   ],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "The native weak doublet differs from the tested neutral singlet trion; a direct current-preserving identification fails.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_charged/results.json",
+   "supporting_receipts": [
+    "model/particle_candidate_composites/results.json",
+    "model/particle_candidate_composite_spectrum/results.json",
+    "model/particle_candidate_neutral_dispersion/results.json"
+   ],
+   "finite_source_evidence": "The internal weak-doublet neutral component exists. The tested neutral singlet trion has different unbroken weak-current transformations.",
+   "required_response": "Construct a populated neutral weak-current channel and its energy-momentum response; a singlet composite name does not supply it.",
+   "required_interactions": null,
+   "required_mass": "Extract mass eigenvalues or controlled splittings and the mixing matrix; flavor names are not mass eigenstates.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct a populated neutral weak-current channel and its energy-momentum response; a singlet composite name does not supply it.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Derive the production/detection flavor dictionary, mass eigenchannels and oscillation probabilities. Specify the neutrino operator and test its lepton-number consequences.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Extract mass eigenvalues or controlled splittings and the mixing matrix; flavor names are not mass eigenstates.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [
+    3
+   ],
+   "measured_mass_GeV": null,
+   "measured_mass_note": "flavour state, no single mass"
+  },
+  {
+   "target": "photon",
+   "theory_family": "photon",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "Self-conjugate in the conditional field theory",
+    "charge": "0",
+    "color": "singlet",
+    "spin": "1",
+    "symbol": "γ"
+   },
+   "best_guess": "unbroken neutral gauge direction, conditional on its vacuum and mixing",
+   "comparison_status": "possible",
+   "missing": [
+    "source-selected field and vacuum/mixing attachment",
+    "physical spin-one or scalar propagation",
+    "complete particle/threshold or resonance detector",
+    "source-derived masses or proved masslessness"
+   ],
+   "source_component_ids": [
+    "Q=T3+Y"
+   ],
+   "source_multiplets": [],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "Finite polar and axial loop channels couple; the isolated A1u line is dark to vector probes. The physical field dictionary and masslessness are unproved.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_bosons/results.json",
+   "supporting_receipts": [],
+   "finite_source_evidence": "Finite polar and axial loop channels have controlled source transitions in a rare empty-matter sector.",
+   "required_response": "Identify an unbroken electromagnetic current and populated transverse response with a massless dispersion law that survives refinement.",
+   "required_interactions": null,
+   "required_mass": "Bound the invariant mass at zero in the same energy-momentum convention; a finite loop energy gap is not a photon mass.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Identify an unbroken electromagnetic current and populated transverse response with a massless dispersion law that survives refinement.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Identify the two physical helicities and electromagnetic vertices, with longitudinal gauge redundancy and charged infrared records treated explicitly.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Bound the invariant mass at zero in the same energy-momentum convention; a finite loop energy gap is not a photon mass.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [],
+   "measured_mass_GeV": 0.0,
+   "measured_mass_note": null
+  },
+  {
+   "target": "gluon",
+   "theory_family": "gluon",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "Real adjoint multiplet; eight color directions",
+    "charge": "0",
+    "color": "8 adjoint",
+    "spin": "1",
+    "symbol": "g"
+   },
+   "best_guess": "color-adjoint gauge-field candidate from eight native current directions",
+   "comparison_status": "possible",
+   "missing": [
+    "source-selected field and vacuum/mixing attachment",
+    "physical spin-one or scalar propagation",
+    "complete particle/threshold or resonance detector",
+    "source-derived masses or proved masslessness"
+   ],
+   "source_component_ids": [
+    "color_current_1..8"
+   ],
+   "source_multiplets": [],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "Eight native color directions exist; an undressed local adjoint current has zero physical Gauss compression.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_bosons/results.json",
+   "supporting_receipts": [],
+   "finite_source_evidence": "Eight color-current directions exist; their undressed local adjoint currents vanish under physical Gauss compression.",
+   "required_response": "Construct gauge-invariant color-field correlation and scattering records with an explicit field/gauge dictionary.",
+   "required_interactions": null,
+   "required_mass": "Control the massless short-distance gauge-field description and infrared gauge-invariant spectrum without assigning a free gluon pole mass.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct gauge-invariant color-field correlation and scattering records with an explicit field/gauge dictionary.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Derive non-Abelian self-interactions and their coupling, plus the color responses of matter. Eight algebra directions are not eight free observed particles.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Control the massless short-distance gauge-field description and infrared gauge-invariant spectrum without assigning a free gluon pole mass.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [],
+   "measured_mass_GeV": 0.0,
+   "measured_mass_note": "massless gauge field, confined"
+  },
+  {
+   "target": "W_plus",
+   "theory_family": "W_plus",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "W−",
+    "charge": "+1",
+    "color": "singlet",
+    "spin": "1",
+    "symbol": "W+"
+   },
+   "best_guess": "charged weak raising-current direction",
+   "comparison_status": "possible",
+   "missing": [
+    "source-selected field and vacuum/mixing attachment",
+    "physical spin-one or scalar propagation",
+    "complete particle/threshold or resonance detector",
+    "source-derived masses or proved masslessness"
+   ],
+   "source_component_ids": [
+    "T_plus"
+   ],
+   "source_multiplets": [],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "Native charged weak directions exist; neutral loop multiplets do not identify a charged W field.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_bosons/results.json",
+   "supporting_receipts": [],
+   "finite_source_evidence": "The native weak raising direction is defined; a physical massive charged vector is unassigned.",
+   "required_response": "Construct a charged vector resonance with its compensating charge and three physical massive-vector polarizations.",
+   "required_interactions": null,
+   "required_mass": "Determine a charged-vector complex-pole or specified experimental mass/width convention with radiative and finite-detector errors.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct a charged vector resonance with its compensating charge and three physical massive-vector polarizations.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Test charged-current couplings, the conjugate W channel, Higgs-phase relations and inclusive decay records.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Determine a charged-vector complex-pole or specified experimental mass/width convention with radiative and finite-detector errors.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [],
+   "measured_mass_GeV": 80.3692,
+   "measured_mass_note": null
+  },
+  {
+   "target": "W_minus",
+   "theory_family": "W_minus",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "W+",
+    "charge": "−1",
+    "color": "singlet",
+    "spin": "1",
+    "symbol": "W−"
+   },
+   "best_guess": "charged weak lowering-current direction",
+   "comparison_status": "possible",
+   "missing": [
+    "source-selected field and vacuum/mixing attachment",
+    "physical spin-one or scalar propagation",
+    "complete particle/threshold or resonance detector",
+    "source-derived masses or proved masslessness"
+   ],
+   "source_component_ids": [
+    "T_minus"
+   ],
+   "source_multiplets": [],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "Native charged weak directions exist; neutral loop multiplets do not identify a charged W field.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_bosons/results.json",
+   "supporting_receipts": [],
+   "finite_source_evidence": "The native weak lowering direction is defined; a physical massive charged vector is unassigned.",
+   "required_response": "Construct a charged vector resonance with its compensating charge and three physical massive-vector polarizations.",
+   "required_interactions": null,
+   "required_mass": "Determine a charged-vector complex-pole or specified experimental mass/width convention with radiative and finite-detector errors.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct a charged vector resonance with its compensating charge and three physical massive-vector polarizations.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Test charged-current couplings, the conjugate W channel, Higgs-phase relations and inclusive decay records.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Determine a charged-vector complex-pole or specified experimental mass/width convention with radiative and finite-detector errors.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [],
+   "measured_mass_GeV": 80.3692,
+   "measured_mass_note": null
+  },
+  {
+   "target": "Z",
+   "theory_family": "Z",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "Self-conjugate in the conditional field theory",
+    "charge": "0",
+    "color": "singlet",
+    "spin": "1",
+    "symbol": "Z"
+   },
+   "best_guess": "neutral weak/hypercharge combination, with mixing unspecified",
+   "comparison_status": "possible",
+   "missing": [
+    "source-selected field and vacuum/mixing attachment",
+    "physical spin-one or scalar propagation",
+    "complete particle/threshold or resonance detector",
+    "source-derived masses or proved masslessness"
+   ],
+   "source_component_ids": [
+    "span(T3,Y)"
+   ],
+   "source_multiplets": [],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "A neutral source-vector channel couples; its weak/hypercharge mixture and physical Z attachment are unproved.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_bosons/results.json",
+   "supporting_receipts": [],
+   "finite_source_evidence": "A neutral weak/hypercharge span exists, without a physical mixing-angle or Z assignment.",
+   "required_response": "Construct the neutral massive vector resonance and separate it from the transverse massless electromagnetic channel.",
+   "required_interactions": null,
+   "required_mass": "Determine a neutral-vector complex-pole or specified experimental mass/width convention with controlled corrections.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Construct the neutral massive vector resonance and separate it from the transverse massless electromagnetic channel.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Calculate weak/hypercharge mixing and neutral-current vertices on the same Higgs-phase construction used for the charged vectors.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Determine a neutral-vector complex-pole or specified experimental mass/width convention with controlled corrections.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [],
+   "measured_mass_GeV": 91.188,
+   "measured_mass_note": null
+  },
+  {
+   "target": "Higgs",
+   "theory_family": "Higgs",
+   "status": "unresolved",
+   "benchmark": {
+    "antiparticle": "Self-conjugate radial scalar in the conditional field theory",
+    "charge": "0",
+    "color": "singlet",
+    "spin": "0",
+    "symbol": "h"
+   },
+   "best_guess": "radial scalar of the declared Higgs doublet, with vacuum unspecified",
+   "comparison_status": "possible",
+   "missing": [
+    "source-selected field and vacuum/mixing attachment",
+    "physical spin-one or scalar propagation",
+    "complete particle/threshold or resonance detector",
+    "source-derived masses or proved masslessness"
+   ],
+   "source_component_ids": [
+    "declared_Higgs_doublet_radial_direction"
+   ],
+   "source_multiplets": [],
+   "actual_primary_excitation_ids": [],
+   "source_test_summary": "A neutral radial scalar made from the Higgs-conjugate composite has uniform elastic detection and a separate resolved positive original energy-transfer window; a surviving inelastic Higgs branch and common physical phase are unproved.",
+   "source_derived_mass_GeV": null,
+   "source_flavor_index": null,
+   "test_receipt": "model/particle_candidate_bosons/results.json",
+   "supporting_receipts": [
+    "model/particle_candidate_charged/results.json",
+    "model/particle_candidate_scalar_gauge_response/results.json",
+    "model/particle_candidate_scalar_spectrum/results.json"
+   ],
+   "finite_source_evidence": "The Higgs-conjugate composite supplies a neutral radial scalar with a capacity-uniform total detector bound and a separate nonzero original dynamical response. Total success includes elastic events.",
+   "required_response": "Measure a gauge-invariant scalar response and establish its populated branch in a demonstrated Higgs phase.",
+   "required_interactions": null,
+   "required_mass": "Extract a scalar resonance and width around the selected physical phase; neither a scalar operator nor a zero one-point function establishes or excludes that phase.",
+   "steps": [
+    {
+     "id": "operator",
+     "title": "Source operator and records",
+     "requirement": "Bind the actual source operator and accessible current/field records, conserved charges, conjugate channel and complete detector, including failure and boundary compensation.",
+     "status": "unproved"
+    },
+    {
+     "id": "response",
+     "title": "Joint energy and momentum response",
+     "requirement": "Measure a gauge-invariant scalar response and establish its populated branch in a demonstrated Higgs phase.",
+     "status": "unproved"
+    },
+    {
+     "id": "transformation",
+     "title": "Physical transformation and statistics",
+     "requirement": "Attach physical Lorentz spin, chirality, exchange and current transformations; finite cube labels alone do not establish these.",
+     "status": "unproved"
+    },
+    {
+     "id": "interaction",
+     "title": "Interactions and distinct species",
+     "requirement": "Construct consistent scalar, vector and fermion vertices. The native-number obstruction to one sharp scalar serving every bare Yukawa channel requires an explicit resolution.",
+     "status": "unproved"
+    },
+    {
+     "id": "mass",
+     "title": "Controlled mass observable",
+     "requirement": "Extract a scalar resonance and width around the selected physical phase; neither a scalar operator nor a zero one-point function establishes or excludes that phase.",
+     "status": "unproved"
+    },
+    {
+     "id": "comparison",
+     "title": "Independent physical comparison",
+     "requirement": "Attach one common unit convention, preserve calibration ancestry and compare complete records with experimental uncertainties.",
+     "status": "unproved"
+    }
+   ],
+   "z6_classes_of_components": [],
+   "measured_mass_GeV": 125.2,
+   "measured_mass_note": null
+  }
+ ],
+ "protected_families": [
+  {
+   "id": "exchange_cover",
+   "label": "Exchange-cover memory",
+   "rows": [
+    {
+     "source_id": "ordered_exchange_charge",
+     "label": "Exchange-orientation bit",
+     "description": "A coherent orientation bit carries two protected charge sectors under the specified ordered-cover repair.",
+     "kind": "protected_memory_charge",
+     "domain": "H66 with a coherent orientation bit; complete ordered-cover repair",
+     "protected_object": "Q=I66 tensor X, two sharp eigenvalue sectors",
+     "topology": "Z2 character of the ordered exchange cover",
+     "evidence": "model/defect_protection/README.md",
+     "classification": "protected_memory",
+     "result": "The coherent ordered-cover bit gives two sharp repair-protected sectors.",
+     "first_required": "Attach the bit to a spatially accessible source excitation and a specified energy generator.",
+     "remaining": [
+      "Prove that its local creation and transport retain the charge under the complete repair and field process.",
+      "Calculate the original joint energy/momentum law and test a particle threshold or branch.",
+      "Identify physical exchange, currents, interactions and the mass observable."
+     ],
+     "shortcut": "The exchange-cover character supplies a source label; its conservation does not supply a dispersion relation.",
+     "physical_particle_id": null,
+     "physical_rest_mass": null
+    }
+   ]
+  },
+  {
+   "id": "spin_and_memory",
+   "label": "Spin, symmetry and memory sectors",
+   "rows": [
+    {
+     "source_id": "selected_spin_charge",
+     "label": "Spin-rotation charge",
+     "description": "A local spin operation creates two opposite conserved internal-charge channels. This charge is not identified with electric charge.",
+     "kind": "conserved_symmetry_charge",
+     "domain": "actual eight-site selected spin cube, J=1, B=1/4; inherited two-flavor repair",
+     "protected_object": "integer U1 spin charge Q; global X parity is exp(i pi Q); local Z creates two sharp Q=+/-1 channels",
+     "topology": "global internal U1 symmetry, not a winding number or identified electric charge",
+     "evidence": "model/defect_localization_readout/PROOF.md",
+     "classification": "finite_created_response",
+     "result": "The selected eight-site spin source has local creation, two sharp internal charge sectors, a positive finite energy response and a controlled detector lifetime.",
+     "first_required": "Resolve the created charge channel in operational momentum on its selected state and clock.",
+     "remaining": [
+      "Separate the moving response from other spin channels and control volume, preparation and cutoff errors.",
+      "Prove the physical Lorentz/current dictionary and interaction records.",
+      "Extract a rest threshold in that dictionary; its finite selection-energy gap alone is insufficient."
+     ],
+     "shortcut": "Reuse the existing local preparation and lifetime proof; no second proof of a nonzero finite response is needed.",
+     "physical_particle_id": null,
+     "physical_rest_mass": null
+    },
+    {
+     "source_id": "single_occupancy_spin_memory",
+     "label": "One-particle-per-site spin memory",
+     "description": "Repair preserves the spin information in a fixed-occupation code. Identity repair supplies no winding invariant.",
+     "kind": "repair_protected_algebra",
+     "domain": "eight-site one-particle-per-site spin code with complete C/E repair",
+     "protected_object": "full M256 operator algebra under repair alone",
+     "topology": "no topological label supplied by identity repair",
+     "evidence": "model/defect_localization_readout/PROOF.md",
+     "classification": "repair_protected_algebra",
+     "result": "Complete repair acts identically on the one-fermion-per-site spin code.",
+     "first_required": "Choose a physical excitation within the code and bind its Hamiltonian, state and clock, including any leakage under evolution.",
+     "remaining": [
+      "Use the complete same-process record law to control leakage and controller energy.",
+      "Calculate a populated moving sector, its physical spin/current attachment and mass definition."
+     ],
+     "shortcut": "An invariant information algebra is not a catalogue of its energy-carrying excitations.",
+     "physical_particle_id": null,
+     "physical_rest_mass": null
+    },
+    {
+     "source_id": "joint_positive_field_canonical_sector",
+     "label": "Canonical spin fields",
+     "description": "A specified spin family admits two canonical field pairs with one positive-energy clock. Its physical particle dictionary is unassigned.",
+     "kind": "constructive_field_family",
+     "domain": "protected spin interaction H_B=J sum(S_x.S_y-1/4)-B sum epsilon_x S_x^1; supplied p=n^-2 and B=J n^-5; positive-B ground and retained H_B clock",
+     "protected_object": "two regular canonical pairs (Q3,P2) and (Q2,P3), with common positive-energy time and full internal U1 on their bounded histories",
+     "topology": "internal source spin rotation, no spatial winding or identified electromagnetic charge",
+     "evidence": "model/spin_joint_field_limit/PROOF.md",
+     "classification": "constructed_field_family",
+     "result": "The specified positive-field spin scaling gives two regular canonical pairs on one ground-state family with a positive-energy clock.",
+     "first_required": "Determine the joint energy/momentum spectral measure and stiffness of these actual canonical fields.",
+     "remaining": [
+      "Control the selected-field scaling and identify whether the response is massless, massive or nonrelativistic.",
+      "Prove physical Lorentz transformations and interactions of the populated sectors.",
+      "Identify any observable species and its mass without replacing this state or clock."
+     ],
+     "shortcut": "Canonical commutation and positive energy are supplied; a numerical stiffness or relativistic mass shell is not.",
+     "physical_particle_id": null,
+     "physical_rest_mass": null
+    },
+    {
+     "source_id": "common_hidden_spin_factor",
+     "label": "Shared spin subsystem",
+     "description": "A qutrit spin factor survives both the stated field dynamics and repair, with 105 multiplicity states.",
+     "kind": "joint_noiseless_subsystem",
+     "domain": "same six-site Weyl/contact field and complete charged-block repair",
+     "protected_object": "at N=4, S=1, a qutrit with 105 multiplicity states, total dimension315",
+     "topology": "internal spin factor, no topological boundary invariant",
+     "evidence": "model/common_spin_protection/README.md",
+     "classification": "protected_internal_factor",
+     "result": "The same chain field and repair preserve a spin factor with H=h tensor I. Complete finite spectra and candidate probes are available in their declared reference.",
+     "first_required": "Select an operator that changes the energy-carrying multiplicity or number sector, rather than only rotating the protected spin.",
+     "remaining": [
+      "Control energy/work during repair: conservation of the spin factor does not imply conservation of the joined Hamiltonian.",
+      "Establish spatial propagation and a controlled higher-dimensional extension, respecting the proved frame-alignment condition.",
+      "Identify Lorentz spin and physical currents before extracting a particle mass."
+     ],
+     "shortcut": "Every operator I tensor A on the isolated protected spin factor commutes with H and has only zero ideal energy transfer.",
+     "physical_particle_id": null,
+     "physical_rest_mass": null
+    },
+    {
+     "source_id": "cube_eta_range",
+     "label": "Eta-pairing sector",
+     "description": "A rank-1820 symmetry sector is protected by the specified dynamics and repair. Its label is internal eta symmetry.",
+     "kind": "joint_protected_sector",
+     "domain": "original eight-site Weyl/contact field with the stated four-dimer repair",
+     "protected_object": "rank1820 image of eta+ from N4 to N6; eta>=2 sector",
+     "topology": "eta symmetry representation, no spatial winding invariant",
+     "evidence": "model/cube_eta_protection/README.md",
+     "classification": "protected_model_spectroscopy",
+     "result": "The eta>=2 range is exactly protected; H_6 V=V(H_4+U) and the prepared fixed-number local probe has eight interacting spectral lines.",
+     "first_required": "Attach the existing local spectroscopy to a moving branch, including complete detector and evolution implementation errors.",
+     "remaining": [
+      "Keep one reference and clock: the eta ladder shifts H energy by U while changing occupation by two.",
+      "Control growing-volume dispersion and physical currents/spin, including repair and compensating occupations.",
+      "Extract the branch mass; U or U/2 is not thereby an elementary rest mass."
+     ],
+     "shortcut": "Reuse the exact eta intertwiner and local resolvent; the model spectral lines need no guessed particle names.",
+     "physical_particle_id": null,
+     "physical_rest_mass": null
+    }
+   ]
+  },
+  {
+   "id": "occupation_response",
+   "label": "Occupation and current responses",
+   "rows": [
+    {
+     "source_id": "one_hole_spin_readout",
+     "label": "Mobile vacancy with a spin record",
+     "description": "One missing occupation can be located, while recorded transport carries the remaining spin information.",
+     "kind": "scoped_repair_sector",
+     "domain": "full two-flavour CAR repair on H_h: one empty site and one fermion at every other site; dimension V 2^(V-1)",
+     "protected_object": "hole-position projectors and internal spin information carried by the recorded signed transport; conditional block dimension 2^(V-1)",
+     "topology": "one-unit occupation deficit, without a topological invariant or physical particle assignment",
+     "evidence": "model/source_family_compatibility/REPAIR_TRAJECTORY.md",
+     "classification": "finite_transport_records",
+     "result": "Recorded repair transports a vacancy and its spin information in the one-hole sector.",
+     "first_required": "Bind an energy generator and original joint energy/momentum response to that same recorded transport.",
+     "remaining": [
+      "Retain all holds, collisions and controller work while proving a stable propagating channel.",
+      "Identify its physical charge, Lorentz spin and interaction records, then its rest threshold."
+     ],
+     "shortcut": "A position record and a conserved occupation deficit do not fix an energy-frequency relation.",
+     "physical_particle_id": null,
+     "physical_rest_mass": null
+    },
+    {
+     "source_id": "centered_full_CAR_charge_response",
+     "label": "Conserved-number response family",
+     "description": "Particle addition, removal and spin probes share an interacting fermion algebra with conserved source occupation.",
+     "kind": "scoped_interacting_response_family",
+     "domain": "fixed-coupling original Weyl/contact action with bare full-domain repair; invariant centered full-ground subsequence; the signed Hubbard chart is a separate direct local instance",
+     "protected_object": "odd addition/removal responses and even spin observables on the same full CAR algebra; total occupation is conserved under source propagation and repair",
+     "topology": "source U1 charge grading, without an assigned winding invariant or Standard Model charge",
+     "evidence": "model/source_family_compatibility/CHARGED_SPECTRAL_BANDS.md",
+     "classification": "interacting_response_family",
+     "result": "Odd addition/removal and even spin responses share the interacting full fermion algebra and conserved source occupation.",
+     "first_required": "Prove positive original weight in a fixed energy/momentum branch or charged threshold of this centered family.",
+     "remaining": [
+      "Control dressed charged sectors and the actual capacity dependence instead of substituting another ground state.",
+      "Attach physical Lorentz/current transformations and interaction vertices.",
+      "Calculate a controlled threshold, resonance or matched mass in a common clock."
+     ],
+     "shortcut": "Reuse the full algebra and current Ward identities; algebraic existence alone supplies no positive particle residue.",
+     "physical_particle_id": null,
+     "physical_rest_mass": null
+    }
+   ]
+  },
+  {
+   "id": "spatial_winding",
+   "label": "Spatial winding textures",
+   "rows": [
+    {
+     "source_id": "compact_opposite_texture_cores",
+     "label": "Opposite winding cores",
+     "description": "A prescribed two-core texture has shell degrees +1 and -1 and four localized band modes. Spontaneous production from repair is not established.",
+     "kind": "specified_topological_background",
+     "domain": "prescribed two-core texture in the declared cubic two-spin field",
+     "protected_object": "opposite shell degrees +1 and -1, constant exterior, four localized band modes",
+     "topology": "genuine shell winding of the prescribed order-parameter field",
+     "evidence": "model/compact_defect_pair/PROOF.md",
+     "classification": "specified_texture_and_bound_modes",
+     "result": "A specified opposite-winding texture has finite energy and four isolated fermion modes with an exterior-volume bound.",
+     "first_required": "Specify and solve the dynamical creation and motion of the texture itself in the declared source.",
+     "remaining": [
+      "Prove stability under the admitted dynamics and retain the opposite core and boundary energy.",
+      "Distinguish the energy and inertia of the texture from the occupations and eigenenergies of its bound fermion modes.",
+      "Calculate moving dispersion, quantum statistics and physical interactions of the selected excitation."
+     ],
+     "shortcut": "The existing Feshbach isolation bounds control fermion modes in the supplied background; they do not derive an autonomous texture or its mass.",
+     "physical_particle_id": null,
+     "physical_rest_mass": null
+    }
+   ]
+  },
+  {
+   "id": "momentum_winding",
+   "label": "Momentum-space winding",
+   "rows": [
+    {
+     "source_id": "kinetic_Weyl_nodes_and_free_fields",
+     "label": "Oppositely wound Weyl nodes",
+     "description": "Eight kinetic nodes have four positive and four negative windings. A stated scaling family has a conditional free-field map; this does not identify eight observed massless species.",
+     "kind": "kinetic_topology_and_conditional_field_map",
+     "domain": "original cubic Weyl symbol -c sum sigma_j sin(k_j); centered full-ground family c=v/a and 0<=U=o(c^(2/7))",
+     "protected_object": "eight isolated kinetic nodes, four of winding +1 and four of winding -1; conditional free vacuum map to eight Weyl fields",
+     "topology": "momentum-space kinetic winding with explicit boundary-gap stability; period-two onsite mass channels couple opposite winding sectors",
+     "evidence": "model/source_family_compatibility/KINETIC_NODE_MAP.md",
+     "classification": "conditional_free_field_map",
+     "result": "Eight winding nodes map to eight massless Weyl fields on the stated weak-interaction scaling family, with a controlled kinetic error.",
+     "first_required": "Prove the physical identification and interaction content of the actual desired family, retaining all opposite-chirality nodes.",
+     "remaining": [
+      "For a massive branch, determine the mass-generating coefficients or order from that declared dynamics and state.",
+      "Establish populated interacting spectral branches, physical currents and the fate of mirror modes.",
+      "Control refinement and map the resulting thresholds to observed species."
+     ],
+     "shortcut": "The free limit and supplied mass-channel formulas are available; the default interacting coupling lies outside the proved free-limit hypotheses.",
+     "physical_particle_id": null,
+     "physical_rest_mass": null
+    }
+   ]
+  },
+  {
+   "id": "exclusion",
+   "label": "Exclusion control",
+   "rows": [
+    {
+     "source_id": "bare_native_source",
+     "label": "Bare source has no nontrivial reducing charge",
+     "description": "The full branch commutant is scalar in the specified bare source-only domain. This entry is an exclusion, not a protected defect.",
+     "kind": "exhaustive_exclusion",
+     "domain": "complete all-seam C/E on H66 or H78; source-only charges",
+     "protected_object": "only scalar branch-commuting charges",
+     "topology": "no protected source-only reducing charge in this domain",
+     "evidence": "model/completion/defect_algebra.py",
+     "classification": "excluded_in_stated_domain",
+     "result": "The complete source-only branch commutant is scalar in the stated H66/H78 domain.",
+     "first_required": "Specify a different declared memory or field extension before proposing a nontrivial protected charge.",
+     "remaining": [
+      "Prove protection on the enlarged full process, including every outside and failure outcome.",
+      "Apply the source-operator, spectral and physical tests to that explicitly different construction."
+     ],
+     "shortcut": "Do not search the excluded scalar commutant for a hidden particle label.",
+     "physical_particle_id": null,
+     "physical_rest_mass": null
+    }
+   ]
+  }
+ ],
+ "excitation_families": [
+  {
+   "id": "internal",
+   "label": "Internal matter weights",
+   "rows": [
+    {
+     "source_id": "up_left",
+     "label": "Up-type doublet component",
+     "description": "Exact internal weights; physical Lorentz spin and flavor are unassigned.",
+     "kind": "native_internal_component",
+     "exact": {
+      "SU3": "3",
+      "SU2_dimension": 2,
+      "Y": "1/6",
+      "Q6": "1",
+      "T3": "1/2",
+      "comparison_Q": "2/3"
+     },
+     "z6_class": 1,
+     "domain": "declared M15 exterior register; same native gauge representation in the primary Wilson source",
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    },
+    {
+     "source_id": "down_left",
+     "label": "Down-type doublet component",
+     "description": "Exact internal weights; physical Lorentz spin and flavor are unassigned.",
+     "kind": "native_internal_component",
+     "exact": {
+      "SU3": "3",
+      "SU2_dimension": 2,
+      "Y": "1/6",
+      "Q6": "1",
+      "T3": "-1/2",
+      "comparison_Q": "-1/3"
+     },
+     "z6_class": 1,
+     "domain": "declared M15 exterior register; same native gauge representation in the primary Wilson source",
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    },
+    {
+     "source_id": "up_right_conjugate",
+     "label": "Conjugate up-type singlet",
+     "description": "Exact internal weights; physical Lorentz spin and flavor are unassigned.",
+     "kind": "native_internal_component",
+     "exact": {
+      "SU3": "3bar",
+      "SU2_dimension": 1,
+      "Y": "-2/3",
+      "Q6": "-4",
+      "T3": "0",
+      "comparison_Q": "-2/3"
+     },
+     "z6_class": 2,
+     "domain": "declared M15 exterior register; same native gauge representation in the primary Wilson source",
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    },
+    {
+     "source_id": "down_right_conjugate",
+     "label": "Conjugate down-type singlet",
+     "description": "Exact internal weights; physical Lorentz spin and flavor are unassigned.",
+     "kind": "native_internal_component",
+     "exact": {
+      "SU3": "3bar",
+      "SU2_dimension": 1,
+      "Y": "1/3",
+      "Q6": "2",
+      "T3": "0",
+      "comparison_Q": "1/3"
+     },
+     "z6_class": 2,
+     "domain": "declared M15 exterior register; same native gauge representation in the primary Wilson source",
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    },
+    {
+     "source_id": "neutrino_left",
+     "label": "Neutral lepton-doublet component",
+     "description": "Exact internal weights; physical Lorentz spin and flavor are unassigned.",
+     "kind": "native_internal_component",
+     "exact": {
+      "SU3": "1",
+      "SU2_dimension": 2,
+      "Y": "-1/2",
+      "Q6": "-3",
+      "T3": "1/2",
+      "comparison_Q": "0"
+     },
+     "z6_class": 3,
+     "domain": "declared M15 exterior register; same native gauge representation in the primary Wilson source",
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    },
+    {
+     "source_id": "charged_lepton_left",
+     "label": "Charged lepton-doublet component",
+     "description": "Exact internal weights; physical Lorentz spin and flavor are unassigned.",
+     "kind": "native_internal_component",
+     "exact": {
+      "SU3": "1",
+      "SU2_dimension": 2,
+      "Y": "-1/2",
+      "Q6": "-3",
+      "T3": "-1/2",
+      "comparison_Q": "-1"
+     },
+     "z6_class": 3,
+     "domain": "declared M15 exterior register; same native gauge representation in the primary Wilson source",
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    },
+    {
+     "source_id": "charged_lepton_right_conjugate",
+     "label": "Conjugate charged-lepton singlet",
+     "description": "Exact internal weights; physical Lorentz spin and flavor are unassigned.",
+     "kind": "native_internal_component",
+     "exact": {
+      "SU3": "1",
+      "SU2_dimension": 1,
+      "Y": "1",
+      "Q6": "6",
+      "T3": "0",
+      "comparison_Q": "1"
+     },
+     "z6_class": 0,
+     "domain": "declared M15 exterior register; same native gauge representation in the primary Wilson source",
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    }
+   ]
+  },
+  {
+   "id": "charged",
+   "label": "Charged endpoint and pair records",
+   "rows": [
+    {
+     "source_id": "particle_primary_regional_fermion:regional_endpoint_irrep",
+     "label": "Charged regional endpoint",
+     "description": "charged-lepton-singlet-type component; conjugate endpoint has opposite charge",
+     "kind": "actual_charged_regional_CAR_factor",
+     "exact": {
+      "SU3": "1",
+      "SU2_dimension": 1,
+      "Y": "1",
+      "Q6": 6,
+      "comparison_Q": "1"
+     },
+     "z6_class": 0,
+     "domain": "original primary member zero; complement and reference retained",
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    },
+    {
+     "source_id": "particle_primary_regional_fermion:internal_pair_probe_irreps",
+     "label": "Compensated pair probe",
+     "description": "pair apparatus with retained charged endpoints; no single-photon assignment",
+     "kind": "complete_compensated_pair_probe",
+     "exact": {},
+     "z6_class": null,
+     "domain": null,
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    }
+   ]
+  },
+  {
+   "id": "weak_composite",
+   "label": "Neutral weak composites",
+   "rows": [
+    {
+     "source_id": "particle_primary_composite_spin:weak_pair_charge_six:0,2,0,0,1",
+     "label": "Weak-pair trion (direct)",
+     "description": "neutral lepton-composite or sterile-like channel from LL e^c; not an identified active neutrino",
+     "kind": "actual_local_gauge_singlet_composite",
+     "exact": {
+      "SU3": "1",
+      "SU2_dimension": 1,
+      "Q6": 0
+     },
+     "z6_class": 0,
+     "domain": null,
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    },
+    {
+     "source_id": "particle_primary_composite_spin:weak_pair_charge_six:0,-2,0,0,-1",
+     "label": "Weak-pair trion (conjugate)",
+     "description": "conjugate neutral-lepton-composite or sterile-like channel; physical antiparticle identity unproved",
+     "kind": "actual_local_gauge_singlet_composite",
+     "exact": {
+      "SU3": "1",
+      "SU2_dimension": 1,
+      "Q6": 0
+     },
+     "z6_class": 0,
+     "domain": null,
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    }
+   ]
+  },
+  {
+   "id": "color_composite",
+   "label": "Neutral color composites",
+   "rows": [
+    {
+     "source_id": "particle_primary_composite_spin:color_triple:1,0,0,2,0",
+     "label": "Color-singlet trion (direct)",
+     "description": "neutral-antibaryon (antineutron-type) composite channel from u^c(d^c)^2, with the opposite increment the neutron-type conjugate",
+     "kind": "actual_local_gauge_singlet_composite",
+     "exact": {
+      "SU3": "1",
+      "SU2_dimension": 1,
+      "Q6": 0
+     },
+     "z6_class": 0,
+     "domain": null,
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    },
+    {
+     "source_id": "particle_primary_composite_spin:color_triple:-1,0,0,-2,0",
+     "label": "Color-singlet trion (conjugate)",
+     "description": "neutral-baryon (neutron-type) conjugate channel; physical baryon identity unproved",
+     "kind": "actual_local_gauge_singlet_composite",
+     "exact": {
+      "SU3": "1",
+      "SU2_dimension": 1,
+      "Q6": 0
+     },
+     "z6_class": 0,
+     "domain": null,
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    }
+   ]
+  },
+  {
+   "id": "even_composite",
+   "label": "Neutral even composites",
+   "rows": [
+    {
+     "source_id": "particle_primary_composite_spin:color_determinant_charge_six_hole:0,0,0,3,-1",
+     "label": "Color determinant with singlet hole (direct)",
+     "description": "neutral even composite channel; no selected named-particle hypothesis",
+     "kind": "actual_local_gauge_singlet_composite",
+     "exact": {
+      "SU3": "1",
+      "SU2_dimension": 1,
+      "Q6": 0
+     },
+     "z6_class": 0,
+     "domain": null,
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    },
+    {
+     "source_id": "particle_primary_composite_spin:color_determinant_charge_six_hole:0,0,0,-3,1",
+     "label": "Color determinant with singlet hole (conjugate)",
+     "description": "neutral even composite channel; no selected named-particle hypothesis",
+     "kind": "actual_local_gauge_singlet_composite",
+     "exact": {
+      "SU3": "1",
+      "SU2_dimension": 1,
+      "Q6": 0
+     },
+     "z6_class": 0,
+     "domain": null,
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    }
+   ]
+  },
+  {
+   "id": "gauge",
+   "label": "Gauge-sector response",
+   "rows": [
+    {
+     "source_id": "particle_primary_reduced_sector:isolated_A1u_cluster",
+     "label": "Isolated odd-parity cube-scalar cluster",
+     "description": "finite neutral collective gauge line; no named photon, gluon, Z or Higgs assignment",
+     "kind": "actual_isolated_gauge_transition",
+     "exact": {},
+     "z6_class": null,
+     "domain": null,
+     "protected_defect_id": null,
+     "physical_particle_id": null
+    }
+   ]
+  }
+ ],
+ "chronology_scope": "Source stationarity is not a cosmological preparation or production history."
+}

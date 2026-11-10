@@ -1,0 +1,179 @@
+{
+  "allFailuresRetained": true,
+  "channels": [
+    {
+      "empiricalParticle": null,
+      "id": "ec",
+      "massGeV": null,
+      "name": "Charged singlet eᶜ",
+      "probabilities": {
+        "failure": {
+          "display": [
+            0.4997605750885174,
+            0.5002394822494999
+          ],
+          "exact": [
+            "2304738856696946337/4611686018427387904",
+            "2306947426155373859/4611686018427387904"
+          ]
+        },
+        "line": {
+          "display": [
+            0.41970415215920037,
+            0.4201989706763194
+          ],
+          "exact": [
+            "1935543770388505359/4611686018427387904",
+            "7751302872102248339/18446744073709551616"
+          ]
+        },
+        "outside": {
+          "display": [
+            0.07994049426566865,
+            0.08015652865692312
+          ],
+          "exact": [
+            "1474641838844635705/18446744073709551616",
+            "369656742492806615/4611686018427387904"
+          ]
+        },
+        "success": {
+          "display": [
+            0.4997605750885174,
+            0.5002394822494999
+          ],
+          "exact": [
+            "2304738856696946337/4611686018427387904",
+            "2306947426155373859/4611686018427387904"
+          ]
+        }
+      },
+      "referenceEnergy": "4",
+      "sourceEnergy": {
+        "display": [
+          0.6906800974836368,
+          0.6926332643931526
+        ],
+        "exact": [
+          "6370399497542706231/9223372036854775808",
+          "12776828565198489711/18446744073709551616"
+        ]
+      },
+      "totalEnergy": {
+        "display": [
+          4.690680097483637,
+          4.6926332643931525
+        ],
+        "exact": [
+          "43263887644961809463/9223372036854775808",
+          "86563804860036696175/18446744073709551616"
+        ]
+      }
+    },
+    {
+      "empiricalParticle": null,
+      "id": "L",
+      "massGeV": null,
+      "name": "Weak lepton doublet L",
+      "probabilities": {
+        "failure": {
+          "display": [
+            0.4997605750885174,
+            0.5002394822494999
+          ],
+          "exact": [
+            "2304738856696946337/4611686018427387904",
+            "2306947426155373859/4611686018427387904"
+          ]
+        },
+        "line": {
+          "display": [
+            0.3210643365533381,
+            0.32149712626058113
+          ],
+          "exact": [
+            "740323955949347371/2305843009213693952",
+            "2965287604281013111/9223372036854775808"
+          ]
+        },
+        "outside": {
+          "display": [
+            0.17855794636780445,
+            0.1788807365684985
+          ],
+          "exact": [
+            "3293812738974044487/18446744073709551616",
+            "3299767167195749175/18446744073709551616"
+          ]
+        },
+        "success": {
+          "display": [
+            0.4997605750885174,
+            0.5002394822494999
+          ],
+          "exact": [
+            "2304738856696946337/4611686018427387904",
+            "2306947426155373859/4611686018427387904"
+          ]
+        }
+      },
+      "referenceEnergy": "4",
+      "sourceEnergy": {
+        "display": [
+          0.09591191443752295,
+          0.09786508134703881
+        ],
+        "exact": [
+          "1769262539248514055/18446744073709551616",
+          "225661513670198913/2305843009213693952"
+        ]
+      },
+      "totalEnergy": {
+        "display": [
+          4.095911914437523,
+          4.097865081347039
+        ],
+        "exact": [
+          "75556238834086720519/18446744073709551616",
+          "9449033550524974721/2305843009213693952"
+        ]
+      }
+    }
+  ],
+  "evidence": {
+    "interacting_charged_response": {
+      "path": "model/coherent_defect_wave/chiral_joint/interacting_charged_response/results.json",
+      "proof": "https://github.com/FloatingPragma/observer-patch-holography/blob/main/model/coherent_defect_wave/chiral_joint/interacting_charged_response/PROOF.md",
+      "sha256": "e135f7b15460427068dd18541b0f7990a3d259d298467604283841c68f75ab34"
+    },
+    "interacting_ground_preparation": {
+      "path": "model/coherent_defect_wave/chiral_joint/interacting_ground_preparation/results.json",
+      "proof": "https://github.com/FloatingPragma/observer-patch-holography/blob/main/model/coherent_defect_wave/chiral_joint/interacting_ground_preparation/PROOF.md",
+      "sha256": "7335d80394ab25ab949ca0e359e70a8eca55636256255b684c68086be2a8c7a6"
+    }
+  },
+  "preparation": {
+    "algebraicServicesDeclared": true,
+    "efficientNativeCircuitExecuted": false,
+    "scheduleTerms": "1197721483502453176152084669",
+    "successLower": 0.999999942661984,
+    "traceDistanceUpper": 2.355922486678908e-07
+  },
+  "schema": "oph.viewer.interacting_energy_evidence.v1",
+  "scope": {
+    "isolatedChargedPole": false,
+    "physicalRestMass": false,
+    "sameAsClassicalLoadRun": false,
+    "sourceDerivedGeV": false,
+    "sourceEnergyTransitions": true
+  },
+  "source": {
+    "cells": 8,
+    "clock": "exp(-it H_lambda)",
+    "family": "full Peter-Weyl gauge-Higgs matter source",
+    "fermionModesPerCell": 30,
+    "hopping": "1/17179869184",
+    "linkStates": 119,
+    "scalarStatesPerCell": 5
+  }
+}

@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import { hotWeights, displayedCut, aliveOnCut } from './cosmos_evidence.js';
+const sum = (rows) => rows.reduce((s, [, n]) => s + n, 0);
+assert.equal(sum(hotWeights('number')), 95.5);
+assert.equal(sum(hotWeights('energy')), 106.75);
+assert.equal(hotWeights('number')[0][1], 27);
+assert.equal(hotWeights('energy')[0][1], 31.5);
+assert.throws(() => hotWeights('count-states'));
+const c = { screen_id: [8, 16, 24], screen_cls: [1, 3, 4],
+  screen_birth_depth: [1, 2, 3], screen_xyz: [1, 0, 0, 0, 1, 0, 0, 0, -1] };
+const d = displayedCut(c, { stride: 2, hash: (id) => id / 8, previousDepth: 1 });
+assert.deepEqual([...d.ids], [16]);
+assert.deepEqual([...d.xyz], [0, 1, 0]);
+assert.deepEqual(d.born, [0]);
+assert.equal(d.storedRows, 3);
+assert.throws(() => displayedCut({ screen_id: [8], screen_cls: [1] }));
+assert.equal(aliveOnCut(1, 3, 1), true);
+assert.equal(aliveOnCut(1, 3, 3), false);
+assert.equal(aliveOnCut(3, -1, 2), false);
+assert.equal(aliveOnCut(3, -1, -1, true), true);
+console.log('PASS: number/energy weights, stored-cut positions, sampling and causal-cut lifetime boundaries');

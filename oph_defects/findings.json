@@ -1,0 +1,715 @@
+{
+ "schema": "oph.viewer.findings.v1",
+ "updated": "2026-11-10 evening",
+ "lead": "What the runs, the audit and the repair-law search have established so far. Every number is from a run or an exact computation; the tag says which. No particle is identified and no rest mass is derived.",
+ "sections": [
+  {
+   "title": "The candidate program and the particle map, 10 November evening",
+   "color": "#ffe45c",
+   "blurb": "The theory session assembled one executable candidate, CF-1: carriers on a cubic lattice, a quantum with a repair record and a spin, one tick of three seam operations. This session built it in Python and in the browser, checked it and ran it up to 2 million carriers, with a run at 16.8 million carriers under way. It is a candidate. The gates below say what is still open.",
+   "cards": [
+    {
+     "value": "1 of 3 generations",
+     "unit": "",
+     "title": "Masses in GeV: the check",
+     "tag": "measured",
+     "text": "The executed model gives particles rest phases only through the frozen flux of the level-10 run. With the electron as anchor (tick 1.5 × 10⁻²³ s, cell 4.4 fm) the up and down quarks come out at 1.6 MeV, or 3.3 MeV in the frozen limit, against 2.2 and 4.7 MeV measured. Everything else fails: the three generations get one value each, so strange, charm, bottom, top, muon and tau miss by factors of 20 to 100,000; the neutrino comes out a million times too heavy; up equals down. If the masses fitted, every particle would need the same tick; they need ticks spread over five orders of magnitude."
+    },
+    {
+     "value": "exact types",
+     "unit": "",
+     "title": "Three parties agree on what is identified and what is not",
+     "tag": "verified",
+     "text": "The field session, the audit and this session reach the same statement. Identified exactly: every type of matter particle of one generation with its colour, weak charge, hypercharge and electric charge, its two handedness classes, and a weak current that acts on the left-handed class only. The audit obtains up-type, down-type and charged-lepton fields by an exact change of variables. Not selected by the law as it stands: the strengths that give each particle its mass, and the number of copies. In this respect the law is where the standard model is: the masses are inputs."
+    },
+    {
+     "value": "0 · 0.3047 · 0.3672 · 0.4510 · 0.4962 · 0.5857",
+     "unit": "per tick",
+     "title": "The mass step with no free number, executed",
+     "tag": "measured",
+     "text": "With the internal walk of the carrier as the mass step, the six rest phases are confirmed to 10⁻¹⁴ on one carrier. On 8³ carriers with the full internal walk of 1,440 states per carrier, phase estimation equals the Dirac form with these angles to 4 × 10⁻¹¹ in 104 runs. No sector leaves its plane."
+    },
+    {
+     "value": "not W, Z, Higgs, top",
+     "unit": "",
+     "title": "A blind test of the heavy tower",
+     "tag": "measured",
+     "text": "Could the five heavy levels be the four heaviest known particles, with the tick at their scale? Every assignment and nine ways to turn a phase into a mass were tried, with one free unit. The best case misses by 5.9 percent. Random sets of five levels do as well in 13 percent of trials. So the tower is not these particles."
+    },
+    {
+     "value": "to 4 digits",
+     "unit": "",
+     "title": "Bound states in a hole of the flux gas",
+     "tag": "measured",
+     "text": "On a line, a region without flux of 1 to 8 carriers binds a quantum with phases 0.1688 to 0.1094 in a background of 0.1712. They equal the exact lattice condition of the field session to all quoted digits and the continuum Dirac well to between 2 × 10⁻⁴ and 1.4 × 10⁻³. In three dimensions a hole binds only when it is about eleven carriers across."
+    },
+    {
+     "value": "−(2/9) p²",
+     "unit": "",
+     "title": "How far the cone holds",
+     "tag": "measured",
+     "text": "Phase estimation at 351 wave vectors on 64³ carriers equals the closed form to 5 × 10⁻¹¹. Along an axis the cone is exact. Along a face diagonal the relative error is −p²/6, along a space diagonal −2p²/9. Each handedness sector has four cones, at the origin and at three points named by the axes, with alternating chirality and net zero."
+    },
+    {
+     "value": "3 × 10⁻¹⁵",
+     "unit": "",
+     "title": "Momentum read by an apparatus",
+     "tag": "verified",
+     "text": "A clock register of 8, 16 or 32 states reads the momentum of a packet through the translation of the lattice. The executed outcome distributions equal the exact kernel to 3 × 10⁻¹⁵, and the readout is the same before and after 32 ticks."
+    },
+    {
+     "value": "Q R = P⁺T + P⁻T*",
+     "unit": "",
+     "title": "Motion between carriers is the same seam operation",
+     "tag": "exact",
+     "text": "The step that moves a quantum to the next carrier is the seam reflector of the public coherent program, taken between two carriers and pointed by the spin, followed by a reflection of the record. Exact certificate by the theory session. Executed here to 9 × 10⁻¹⁷."
+    },
+    {
+     "value": "4 engines",
+     "unit": "",
+     "title": "Four engines agree",
+     "tag": "verified",
+     "text": "Conformance suite, 26 checks: seam identities, the closed form of the tick and of the two-tick period, 200 ticks forward and 200 back on 32³ with random links and rest angles (3 × 10⁻¹⁵), gauge covariance (exactly zero for signs), the reflection property of the half-step frame (4 × 10⁻¹⁶), record statistics, packets. The reference of the field session, its binding definition file, this session’s Python engine and the browser engine agree to 6 × 10⁻¹⁶. The suite found one error of this session before the large runs."
+    },
+    {
+     "value": "1.8 × 10⁻¹⁵",
+     "unit": "",
+     "title": "Reversible at 16.8 million carriers",
+     "tag": "measured",
+     "text": "64 ticks forward and 64 back on 256³ carriers with random link signs and rest angles return the state to 1.8 × 10⁻¹⁵. Norm drift 2 × 10⁻¹⁴. Cost: 18 seconds per tick on one core, 9 GB."
+    },
+    {
+     "value": "96.2 · 94.4 · 93.9",
+     "unit": "cells",
+     "title": "One cone for every species",
+     "tag": "measured",
+     "text": "At 16.8 million carriers a quantum without rest phase leaves as a shell. After 96 ticks its radius is 96.2 cells along an axis, 94.4 along a face diagonal and 93.9 along a space diagonal. With a wider packet, which holds lower wave numbers, it is 97.4, 97.0 and 96.9. Exact along an axis, third order in the wave number elsewhere. With rest phases 0.0878 and 0.1712 the mean radius is 81.4 and 64.9 against 94.7."
+    },
+    {
+     "value": "−0.9 %",
+     "unit": "",
+     "title": "Landau levels in a uniform field",
+     "tag": "measured",
+     "text": "With a uniform field through the link phases the spectrum shows the relativistic Landau levels. The first level sits at 0.31042 against √(2B) = 0.31333. The zero mode is there. With a rest angle the lowest level sits exactly at the rest angle. The deviation grows with the field strength."
+    },
+    {
+     "value": "−2.0 %",
+     "unit": "",
+     "title": "Scattering off a flux line",
+     "tag": "measured",
+     "text": "A pattern with an odd number of spinor levels scatters off a line of link flux with the Aharonov–Bohm cross-section for half a flux quantum: 0.1086 against 0.1108 between 60 and 150 degrees. A pattern with an even number passes untouched."
+    },
+    {
+     "value": "density × angle",
+     "unit": "",
+     "title": "A gas of carrier flux gives a rest phase",
+     "tag": "measured",
+     "text": "At 16.8 million carriers the rest phase of a quantum in a random gas of flux-holding carriers is the density times the angle per carrier: 0.3 percent off at the densities of the committed run, 0.6 percent at 3 and 10 percent density, 2.8 percent at 1 percent. The coherent amplitude decays by less than 3 × 10⁻⁶ per tick."
+    },
+    {
+     "value": "10 · 12 · 123 · ∞",
+     "unit": "carriers",
+     "title": "Who gets through a gas of link flux",
+     "tag": "measured",
+     "text": "Routing through a static gas of link flux with the densities of the frozen classes: left-handed quarks get about 10 carriers, right-handed quarks 12, left-handed leptons 123, right-handed electron and neutrino without limit. A quark and an antiquark in the same place carry no colour-centre charge and are free. Held one or more carriers apart they are lost at twice the single rate when the flux sits in smallest loops, and at 0.6 to 0.8 of the single rate when it sits in long lines. So the outcome depends on how the flux is arranged, and that arrangement is not derived. A run with the least-biased arrangement at the same density is under way."
+    },
+    {
+     "value": "69 : 1.2 : 1.2",
+     "unit": "",
+     "title": "Only groups without net charge sit on a carrier",
+     "tag": "measured",
+     "text": "At the end of the level-10 run 69 percent of the occupied carriers hold a pair of classes 2 and 4, 1.2 percent hold three of class 4 and 1.2 percent three of class 2. In the best-guess reading these are meson-like, baryon-like and antibaryon-like groups. Counts: 86,476 baryon-like against 86,788 antibaryon-like, no excess of matter."
+    },
+    {
+     "value": "left · right",
+     "unit": "",
+     "title": "What an observer of a defect would measure",
+     "tag": "measured",
+     "text": "From the tracked identities of the stored runs. Classes 1 and 5 wander by diffusion, never in a straight line: mean squared displacement grows with the power 0.85 to 0.90 of time. Every step of a class 1 or 2 is to the left of the local load flow and every step of a class 4 or 5 to the right, in all 3.4 million steps: equal and opposite sideways drift. Classes 2, 3 and 4 are frozen. All 11.5 million fusions and splits obey addition modulo 6. Nothing spin-like was found, and content never moves from one carrier to another."
+    },
+    {
+     "value": "a relic",
+     "unit": "",
+     "title": "The flux of the big runs was set by the preparation",
+     "tag": "measured",
+     "text": "Every frozen pair is created in the first sweeps from the seeded loads. After the loads settle, classes 2, 3 and 4 never change. A scan over preparations at levels 5 and 6 shows the dependence: loads seeded from 0 to 5 leave 0.268 pairs of classes 2 and 4 per carrier, loads from 0 to 3 leave 0.008, a settled state with a tenth of the loads moved leaves 0.002, and a start inside the settled band leaves none. No single number of the starting loads predicts it. The decay rate of classes 1 and 5 is the same for every start, 0.009 per sweep."
+    },
+    {
+     "value": "0 · 0.305 · 0.367 · 0.451 · 0.496 · 0.586",
+     "unit": "per tick",
+     "title": "A mass step with no free number",
+     "tag": "computed",
+     "text": "If the internal walk of the carrier is the mass step, every internal sector is a species with a fixed rest phase. The family on the uniform load state is massless. The other sectors are a tower at the scale of the lattice. An executed check on a small lattice is running."
+    },
+    {
+     "value": "massless family",
+     "unit": "",
+     "title": "The law gives the family no mass",
+     "tag": "audit",
+     "text": "The audit finds an exact fifteen-state module with the charges of one generation. The native repair acts as zero on it, so the law cannot split or lift its masses. A light mass has to come from the state the universe is in."
+    },
+    {
+     "value": "2 source units",
+     "unit": "",
+     "title": "The protected flux pair travels and has a rest energy",
+     "tag": "audit",
+     "text": "The audit moves a complete flux pair between carriers, gives it a filled reference with particle and hole excitations of positive energy and a controlled free limit. Its rest energy is two source units under a declared rule. Its five positions carry no gauge charge. Best guess of this app: the dark part."
+    },
+    {
+     "value": "one mismatch",
+     "unit": "",
+     "title": "The first mass option fails for handedness partners",
+     "tag": "forced by data",
+     "text": "Reading the rest angle from the charge of a pattern gives the right-handed electron zero and its left-handed partner a positive angle. A particle needs one angle for both. The option that fits the chart, a toggle of the neutral spinor level, has no value yet."
+    },
+    {
+     "value": "a known automaton",
+     "unit": "",
+     "title": "The free tick is in the literature",
+     "tag": "open",
+     "text": "According to the theory session the two-component tick is the Weyl automaton of D’Ariano and Perinotti on the body-centred cubic lattice. Imported from memory, to be verified against the papers. What the search adds is its source: the frame, the lifts and the record all come from the carrier."
+    }
+   ]
+  },
+  {
+   "title": "Gates before large data runs",
+   "color": "#6fb1ff",
+   "blurb": "Owner, this evening: large runs that generate data wait until the native observer, the repair law and the memory law are sure. Validation runs of the candidate go ahead. Ten gates, kept by the theory session in repair-law/GATES.md. Two need the owner.",
+   "cards": [
+    {
+     "value": "G1",
+     "unit": "",
+     "title": "One program",
+     "tag": "partly",
+     "text": "The suite passes and 128³ is reversible. Open: the definition file and the reversibility block at 256³, which is running."
+    },
+    {
+     "value": "G2",
+     "unit": "",
+     "title": "Routing identity",
+     "tag": "partly",
+     "text": "Exact certificate done. The audit has not checked it yet."
+    },
+    {
+     "value": "G3",
+     "unit": "",
+     "title": "The cubic arrangement",
+     "tag": "open",
+     "text": "A reason for carriers on the cubic lattice of one frame, or the owner’s decision to adopt it as architecture."
+    },
+    {
+     "value": "G4",
+     "unit": "",
+     "title": "Memory law",
+     "tag": "partly",
+     "text": "One option has no free angle and gives a massless family and a heavy tower. A light mass has no source in the law. Open: the state that supplies it. Owner decision."
+    },
+    {
+     "value": "G5",
+     "unit": "",
+     "title": "Occupations",
+     "tag": "running",
+     "text": "Vacuum, statistics and currents."
+    },
+    {
+     "value": "G6",
+     "unit": "",
+     "title": "Interaction",
+     "tag": "running",
+     "text": "Gauge invariance and the cone hold exactly. The background-field runs show the relativistic levels. Open: a proved bound and a dynamical field."
+    },
+    {
+     "value": "G7",
+     "unit": "",
+     "title": "The travelling object",
+     "tag": "running",
+     "text": "Which protected object travels, with position and momentum readouts. Observer cards of every defect class are being extracted from the runs."
+    },
+    {
+     "value": "G8",
+     "unit": "",
+     "title": "Dispersion",
+     "tag": "running",
+     "text": "The free bound with constants, confirmed by execution at scale."
+    },
+    {
+     "value": "G9",
+     "unit": "",
+     "title": "Frozen protocol",
+     "tag": "running",
+     "text": "The comparison protocol is frozen before production data exist."
+    },
+    {
+     "value": "G10",
+     "unit": "",
+     "title": "Audit",
+     "tag": "open",
+     "text": "The audit team checks the definition and the gates."
+    }
+   ]
+  },
+  {
+   "title": "The repair-law search, 10 November",
+   "color": "#ff5fb0",
+   "blurb": "Three parties look for the setup that supplies the premises of the finite theorems: the theory session, an independent audit, and this simulation session. Nothing is accepted yet. These are the pieces that passed their checks.",
+   "cards": [
+    {
+     "value": "12 = 1 + 3 + 8",
+     "unit": "",
+     "title": "The gauge algebra from two multiplets of one carrier",
+     "tag": "exact",
+     "text": "Port loads compressed to a three-dimensional and a two-dimensional multiplet of the carrier generate u(1) + su(2) + su(3): dimension 12, centre 1. The twelve operators are independent for the real triplet with the conjugate spinor doublet. Three independent codes agree. It is a template until a law owns it as its complete response."
+    },
+    {
+     "value": "1 · 2 · 3",
+     "unit": "dimensions",
+     "title": "Consensus spaces of local agreement",
+     "tag": "exact",
+     "text": "Agreement across a seam leaves the constants. Agreement of a spinor on the three ports of a face leaves exactly a doublet: 20 checks of rank 10. Agreement of a vector on the four ports of two adjoining faces leaves exactly a triplet: 30 checks of rank 9. Certified in exact arithmetic."
+    },
+    {
+     "value": "mod 20",
+     "unit": "enclosed area",
+     "title": "The flux is a record the rule already writes",
+     "tag": "exact",
+     "text": "A closed history of a quantum encloses a number of faces, defined modulo 20. The sector of flux k is the k-th Fourier component of the ordinary chain together with that counter. Five bits per quantum, nothing in the source changes."
+    },
+    {
+     "value": "59.7 %",
+     "unit": "in a spinor doublet",
+     "title": "Agreement judged after recharting",
+     "tag": "measured",
+     "text": "Candidate of the theory session: a seam event corrects the component in which its two ports disagree after recharting through their spinor frames. The load statistics stay exactly those of the reference rule. The stationary state is unique and faithful. A doublet carries 59.7 percent of it; for two loads a triplet carries 42.2 percent."
+    },
+    {
+     "value": "cos ω = λ",
+     "unit": "per walk step",
+     "title": "A coherent clock from the same kernel",
+     "tag": "exact",
+     "text": "Public program coherent-seam-repair-v1 of the audit. The removed disagreement is kept in a coherent record and the seam address is reflected. The step is unitary on 1,440 dimensions, and every relaxation factor λ of the reference rule becomes a frequency. After two steps a quantum is back at its port with probability 643/900, against 101/120 for the committed rule. The Carrier tab runs it."
+    },
+    {
+     "value": "1 − cos ω",
+     "unit": "correction probability",
+     "title": "Energy read from one tick",
+     "tag": "exact",
+     "text": "Prepare a quantum with a blank record, run one tick of the walk, read the record. The probability that a correction happened is the kernel level divided by the number of addresses, which is 1 − cos ω for a branch. So a rest phase is the correction probability at rest, the whole dispersion relation is a table of correction probabilities, and a state in consensus is never corrected: massless means never corrected. Found by the theory session; the Carrier tab shows it."
+    },
+    {
+     "value": "−2 · −2 · −2 · +3 · +3",
+     "unit": "charge",
+     "title": "A five-level internal factor rides on the walk",
+     "tag": "exact",
+     "text": "Three vector levels and two spinor levels. The charge is conserved; the audit writes it with the opposite overall sign. One flipped link changes a three-step return amplitude by −1/6750, so a loop of the background is seen by a detector. The Particles tab uses these five levels for the best-guess labelling of matter."
+    },
+    {
+     "value": "odd stays odd",
+     "unit": "regional flux",
+     "title": "A defect that moves and is protected",
+     "tag": "exact",
+     "text": "Thirty link bits on the seams of a carrier. Odd flux inside a region cannot be repaired away while the boundary is held fixed, and the defect moves from face to face with complete records. If the boundary link may flip, the pair is erased. Protection always names its boundary and its allowed moves."
+    },
+    {
+     "value": "1 against 1/2",
+     "unit": "return probability",
+     "title": "Recording changes the result",
+     "tag": "exact",
+     "text": "In the joint program of wave and flux the two become tied together: where the wave is decides whether the flux moves. Reversing the coupling brings a prepared wave back with certainty. Reading where the flux is first, and then reversing, brings it back half of the time. Both runs stay inside the gauge-invariant sector. The Carrier tab runs it."
+    },
+    {
+     "value": "0.7467 · 1.3820",
+     "unit": "gap, kernel units",
+     "title": "A gap that does not shrink with the universe",
+     "tag": "measured",
+     "text": "With the flux in every carrier, the spinor and vector sectors on the federation have a gap equal to the carrier's own: 5 − 4.2533 and (5 − √5)/2. It is the lowest Landau level of a uniform field, so no gluing can make it move, and it is the same at every size. Its Compton length is 0.14 mesh edges: a gap at the cutoff, not a particle mass."
+    },
+    {
+     "value": "1 of 2 · 3 of 3",
+     "unit": "branches do not move",
+     "title": "One glue port per neighbour is too little",
+     "tag": "measured",
+     "text": "A carrier multiplet of dimension d gives 2d − 3 flat branches of 2d per cell when carriers touch through one port per neighbour: one of two for the spinor, three of three for the vector. Glued through a whole seam, no branch is flat: the spinor branches rise as 0.032 q² and 0.031 q² against 0.035 q² for loads, and the doublet splits by 0.033 because the glued ports point in different directions."
+    },
+    {
+     "value": "0.9906",
+     "unit": "of the massless speed",
+     "title": "A rest phase in the walk clock",
+     "tag": "computed",
+     "text": "In a declared extension of the public walk to the federation, loads are massless with speed 0.0207 mesh edges per step. The moving spinor branch has a rest phase of 0.1506 per step and a curvature equal to 0.9906 of the massless one. Its Compton length is 0.14 mesh edges, so it is slow at every wave number of the lattice and the relativistic shell form is not testable at this gap. The vector branches at 0.2050 do not move with one glue port per neighbour."
+    },
+    {
+     "value": "copy after transport",
+     "unit": "",
+     "title": "The earlier simulator already recharted",
+     "tag": "verified",
+     "text": "The first simulator held a group element at each port and on each link, compared two ports after transport through the link, and repaired by copying one onto the other. The scalar reference rule dropped both. Recharted agreement restores that component."
+    },
+    {
+     "value": "E² − p²",
+     "unit": "of the port loads",
+     "title": "Loads as light-like momenta",
+     "tag": "proposal",
+     "text": "A load at a port is one unit of energy in the direction of the port. The loads of a carrier sum to a 2 × 2 Hermitian matrix whose determinant is an invariant mass squared; for two quanta it is the chord between their ports. Repair keeps the energy and relaxes the momentum. The identity is exact, the reading is under test."
+    },
+    {
+     "value": "60 of 60",
+     "unit": "rotations from closed paths",
+     "title": "Which frame rule lets a carrier turn",
+     "tag": "exact",
+     "text": "Carrying a carrier's chart around closed paths of the federation must be able to produce every rotation of the carrier. The rule that keeps glued port on glued port gives only three. The six rolling rules, in which the carrier rolls over a seam of its glue face, give all 60 from level 1 on, and with spinors all 120 of the double cover. They put a fifth of a turn of curvature at every six-valent mesh vertex."
+    },
+    {
+     "value": "4.0",
+     "unit": "dimension of the record order",
+     "title": "Load records as events in 3+1",
+     "tag": "measured",
+     "text": "Each recorded load is a light-like step in the direction of its port. Sums of such steps from many carriers, ordered by which sum can reach which, form an order whose dimension reads 3.98 ± 0.02 in small windows deep inside the cloud, by two independent estimators. Large windows fall below 4 and the cloud is not yet the same for moving observers."
+    },
+    {
+     "value": "a cap is a boost",
+     "unit": "",
+     "title": "A cap is a boost as an effect, a rotation as a flow",
+     "tag": "exact",
+     "text": "The effect of a cap of ports on the spinor levels is a boost along the axis of the cap: rapidity 1.26 for a seam, 1.08 for a face, 0.60 for a port with its five neighbours. The theorem asks for more: the modular flow of a cap has to move points along the cap like a boost. For every state tried it is a rotation about the cap axis instead, because a state that respects the carrier symmetry allows nothing else. Boosts appear only as a declared one-outcome readout of a cap. One lead: a half-filled band of sections has a boost-like flow along its edge."
+    },
+    {
+     "value": "3 dimensions",
+     "unit": "carriers edge to edge",
+     "title": "A cubic family that uses all twelve ports",
+     "tag": "exact",
+     "text": "The carrier has five cubic frames: six of its seams are centred on three perpendicular axes. Carriers in that orientation fit on a cubic lattice, each sharing one seam with each of six neighbours, every port in exactly two carriers. Loads are massless, with curvature exactly 5/9, the same in every direction to leading order; the next term differs by ten percent between directions. In the walk they move at 0.0962 lattice constants per tick. All carriers are translates, so a frame carried by a quantum is transported without change. Found by the theory session; the walk on it is being built."
+    },
+    {
+     "value": "σ₁ σ₂ σ₃",
+     "unit": "from carrier half-turns",
+     "title": "A Dirac coin from the carrier",
+     "tag": "computed",
+     "text": "On the two spinor levels the three half-turns of a cubic frame act as three anticommuting reflections. Together with the two-state repair record they satisfy the relations of a four-component coin with H² = p² + m². The audit declares such a routing walk on a cubic box with a mass angle as a control. Proposal under test: the mass angle of such a walk is the amplitude of correction events."
+    },
+    {
+     "value": "flux, not matter",
+     "unit": "",
+     "title": "What the markers of the big runs are",
+     "tag": "audit",
+     "text": "A register class is a flux of the centre of the gauge group. Class 3 is the central minus one of the weak group, classes 2 and 4 the centre of the colour group, classes 1 and 5 generate. A pattern of charge Q sees flux k as the phase exp(2πi kQ/6). Matter is a quantum with internal levels; it exists in the coherent model, not in the big runs. Particle names now sit on patterns only."
+    }
+   ]
+  },
+  {
+   "title": "The ten steps to a particle",
+   "color": "#6fb1ff",
+   "blurb": "The remaining steps named by the audit for the coherent construction, with what exists today. One clock everywhere: walk steps. No number is called a mass before steps 9 and 10.",
+   "cards": [
+    {
+     "value": "1",
+     "unit": "a growing family",
+     "title": "Local propagation between carriers",
+     "tag": "partly",
+     "text": "Kernel level done: with the address register carried by the quantum the walk on a federation has phases cos ω = 1 − λ/NA exactly. A reference engine reproduces the public numbers. The audit has a cubic box with a partial exchange between cells; the theory session an edge-sharing cubic family. Runs at several sizes are in progress."
+    },
+    {
+     "value": "2",
+     "unit": "constraints and protection",
+     "title": "Gauss constraints and defects across the family",
+     "tag": "running",
+     "text": "One carrier is exact in the public program: one interior Gauss constraint, odd regional flux protected with a held boundary. The frame rules between carriers are computed, and two requirements pull apart: the rule that is natural under refinement gives only three rotations, and the six rolling rules that give all sixty are not natural. Which one is right is open. The family complex and its protected labels are being computed."
+    },
+    {
+     "value": "3",
+     "unit": "vacuum and preparation",
+     "title": "A reference, a vacuum, an excitation",
+     "tag": "partly",
+     "text": "The public program prepares a faithful stationary reference with every failure kept, and three pure background states with probability 1/10 per trial. The two-quanta sector and the particle and hole reading are being computed."
+    },
+    {
+     "value": "4",
+     "unit": "position and momentum",
+     "title": "Apparatus for where and how fast",
+     "tag": "running",
+     "text": "Port and carrier projectors exist. A covariant translation and a momentum readout by phase estimation, with all outcomes kept, are being built on the reference engine."
+    },
+    {
+     "value": "5",
+     "unit": "populated spectra",
+     "title": "Which branches an excitation fills",
+     "tag": "partly",
+     "text": "Kernel level done for two gluings. The public program has exact clock moments of a prepared excitation, with weight 17/288 off the flat part. Executed spectra on patches are in progress."
+    },
+    {
+     "value": "6",
+     "unit": "relativistic dispersion",
+     "title": "A rest phase and a curvature",
+     "tag": "partly",
+     "text": "Flat lattice done: the moving spinor branch has a rest phase of 0.1506 per step and a curvature that corresponds to 0.9906 of the massless speed. Its Compton wave number is larger than the whole zone, so the branch is slow everywhere and the shell form ω² = ω₀² + v²q² cannot be told from a parabola at this gap. Spheres and the cubic family are next. The audit's routing walk has an exact bound for its Dirac limit."
+    },
+    {
+     "value": "7",
+     "unit": "occupation and statistics",
+     "title": "More than one quantum",
+     "tag": "running",
+     "text": "The audit has an exterior lift over 7,200 modes with a shared link register. Twelve occupation patterns label one generation and its conjugate. Statistics, chirality and currents under the public rule are being computed."
+    },
+    {
+     "value": "8",
+     "unit": "interactions",
+     "title": "Scattering and decay",
+     "tag": "running",
+     "text": "One carrier is exact: the flux changes the wave record, the wave moves the flux, a record of the flux position halves a return probability. Scattering of the two types on a flux and lifetimes under repair are being computed on patches."
+    },
+    {
+     "value": "9",
+     "unit": "the mass observable",
+     "title": "Stable mass, threshold or resonance",
+     "tag": "open",
+     "text": "Definitions and a frozen table of the pure numbers that exist today are being written. Every massive branch found so far sits at the cutoff. No rest mass exists."
+    },
+    {
+     "value": "10",
+     "unit": "comparison",
+     "title": "Blinded comparison before any name",
+     "tag": "open",
+     "text": "Predictions are frozen before measured values are opened. The scoreboard on the Particles tab will fill from that table."
+    }
+   ]
+  },
+  {
+   "title": "What is still open",
+   "color": "#c5d0e6",
+   "blurb": "In dependency order. Each line has an owner in the search.",
+   "cards": [
+    {
+     "value": "1",
+     "unit": "ownership",
+     "title": "The response must be the law's own",
+     "tag": "open",
+     "text": "The twelve responses have to be the complete response of the law, produced by accepted histories, with the carrier rotations acting inside the generated group."
+    },
+    {
+     "value": "2",
+     "unit": "family",
+     "title": "From one carrier to a growing federation",
+     "tag": "open",
+     "text": "The walk, the comparison of frames across glue seams, and the reference state on a refining federation. The gluing itself is in question."
+    },
+    {
+     "value": "3",
+     "unit": "Lorentz",
+     "title": "Geometric flow of caps",
+     "tag": "open",
+     "text": "The theorem needs a screen state whose cap modular flows act as conformal maps of the sphere. Tested and failed for the spinor sector: the flow is a rotation for the plain code state, for its thermal states, for the filled sections and for the stationary state of the recharted pump. A half-filled band with a Fermi edge is the one lead, and no law prepares it yet."
+    },
+    {
+     "value": "4",
+     "unit": "mass",
+     "title": "A populated moving branch",
+     "tag": "open",
+     "text": "A rest mass needs a protected excitation that moves, a dispersion relation in one declared clock, and a unit convention. None exists today."
+    }
+   ]
+  },
+  {
+   "title": "Signal speeds on the screen",
+   "color": "#4cc3ff",
+   "blurb": "Mesh edges per sweep. One sweep is one attempt per seam on average; an observer counts about 33 own ticks per sweep.",
+   "cards": [
+    {
+     "value": "0.36",
+     "unit": "edges per sweep",
+     "title": "Influence front",
+     "tag": "measured",
+     "text": "The farthest any record can have reached. The same at levels 5, 6 and 7 and round to better than 1 percent. Nothing native travels on it."
+    },
+    {
+     "value": "0.0071",
+     "unit": "edge² per sweep",
+     "title": "Load transport is diffusion",
+     "tag": "exact",
+     "text": "The mean law of repair is exactly linear. Measured relaxation rates and variances agree with it to 0.05 percent. A load signal needs a time that grows with the square of the distance."
+    },
+    {
+     "value": "0.029 / 2^level",
+     "unit": "edges per sweep",
+     "title": "The paper's wave on the paper's clock",
+     "tag": "computed",
+     "text": "It halves with every refinement level. Below about one screen radius a load disturbance arrives before it."
+    },
+    {
+     "value": "0.31 × angle",
+     "unit": "edges per sweep",
+     "title": "A wave on a regular clock",
+     "tag": "measured",
+     "text": "Transverse seam and face modes, every seam acting once per sweep. The speed is fixed in mesh units and stays below the influence front. The load-coupled wave moves at 0.084 × angle."
+    },
+    {
+     "value": "≈ 1 / angle",
+     "unit": "edges of range",
+     "title": "A wave on the declared random schedule",
+     "tag": "measured",
+     "text": "Independent random draws scatter every wavelength at a quarter of the squared pulse angle per sweep. Two independent codes on two lattices agree. The Detector tab shows it."
+    },
+    {
+     "value": "1.00 against 2.0",
+     "unit": "additivity of round trips",
+     "title": "Only a ballistic signal defines a length",
+     "tag": "measured",
+     "text": "For three observers in a line, round-trip times of the influence front add up (0.97 to 1.00). For a load pulse the long trip takes twice the sum (1.86 to 2.04), and one quantum arrives as an excess of only 0.004 at four edges."
+    },
+    {
+     "value": "3.0",
+     "unit": "dimension of the causal order",
+     "title": "The order of native attempts is two space dimensions plus time",
+     "tag": "measured",
+     "text": "The ordering fraction of intervals of the provenance order settles at 0.222 to 0.231 at levels 4, 5 and 6. The value for two space dimensions and time is 8/35 = 0.229."
+    }
+   ]
+  },
+  {
+   "title": "What one speed of light requires",
+   "color": "#ffe45c",
+   "blurb": "Recovered by flipping one declared input at a time and keeping what reproduces nature.",
+   "cards": [
+    {
+     "value": "flow",
+     "unit": "not draws",
+     "title": "Unrecorded transport runs continuously",
+     "tag": "forced by data",
+     "text": "Recorded repair stays a random event process. Transport that leaves no record has to act on all seams as one flow, and its parameter is the clock."
+    },
+    {
+     "value": "0 %",
+     "unit": "against 2.8 % and 21 %",
+     "title": "A symmetric wiring of the glue ports",
+     "tag": "measured",
+     "text": "The declared wiring splits the lowest wave triplet by 2.8 percent and the transverse triplet by 21 percent. The symmetric control wiring gives exact degeneracy."
+    },
+    {
+     "value": "4.05",
+     "unit": "ratio of pulse sizes",
+     "title": "One ratio joins light and load waves",
+     "tag": "computed",
+     "text": "With unit weights the transverse modes run 4.05 times faster than the load wave. One declared ratio makes the two speeds equal."
+    }
+   ]
+  },
+  {
+   "title": "Where a rest mass can come from",
+   "color": "#3ee6a8",
+   "blurb": "No mass is derived yet. These are the structures in the code that have the right shape.",
+   "cards": [
+    {
+     "value": "1/2",
+     "unit": "per raised or lowered port",
+     "title": "A native rest energy at whole-number filling",
+     "tag": "exact",
+     "text": "On a whole-number background a raised port and a lowered port behave as particle and antiparticle. Each costs one half in units of the mismatch potential, and a pair annihilates with a release of exactly 1: 11,814 of 11,814 pairs in the run. They diffuse; they do not travel."
+    },
+    {
+     "value": "0.0570",
+     "unit": "slope at the crossing",
+     "title": "A cone where two bands cross",
+     "tag": "computed",
+     "text": "On the symmetric wiring the two lowest bands of the load operator touch in a cone, at level 0.1830, with the same slope in every direction. The levels are relaxation rates of the committed rule. Under a wave clock everything that lives there would move at one speed."
+    },
+    {
+     "value": "0.0105",
+     "unit": "gap per unit flow time",
+     "title": "A gap fixed by the wiring",
+     "tag": "computed",
+     "text": "When up and down carriers are glued through inequivalent port triples, the two lowest bands of the load operator separate, with one slope in every direction. Of 74 possible three-port wirings, two do this with an isotropic massless band. These are bands of a diffusion operator, read near the crossing; cubic corrections are present. They become energies only under a declared wave clock."
+    },
+    {
+     "value": "0.97 · 1.62 · 2.20",
+     "unit": "× massless curvature",
+     "title": "Gapped bands that move",
+     "tag": "exact",
+     "text": "Three bands have a rest frequency and disperse. Their curvatures differ from the massless band, so they do not share its cone as they stand."
+    },
+    {
+     "value": "16 of 24",
+     "unit": "bands are flat",
+     "title": "Excitations that cannot move",
+     "tag": "exact",
+     "text": "Most internal modes of a carrier stay inside it. Their levels are 5 ± √5, 5 ± √3, 6 and 8."
+    },
+    {
+     "value": "5 · 8 · 10",
+     "unit": "cost units",
+     "title": "Register defects carry a declared cost",
+     "tag": "declared",
+     "text": "The cost table of the register in these runs. It is declared, not derived, and the register does not act back on the loads."
+    }
+   ]
+  },
+  {
+   "title": "Charges of the closed-loop extension",
+   "color": "#ff7a45",
+   "blurb": "Integer loop charges of the seam offsets. They act back on the loads, so their effects are in native records.",
+   "cards": [
+    {
+     "value": "0.114 + 0.061 ln r",
+     "unit": "release per sweep",
+     "title": "A pair costs a logarithm",
+     "tag": "exact",
+     "text": "The standing release of a pinned unit pair. An isolated charge has no finite cost on the two-dimensional screen."
+    },
+    {
+     "value": "0.06 to 0.12",
+     "unit": "edges per sweep",
+     "title": "A drift that ignores distance",
+     "tag": "measured",
+     "text": "Each charge of a pair drifts at a speed that does not depend on the separation or on the level. Its direction turns with the filling of the background."
+    },
+    {
+     "value": "0.156",
+     "unit": "edge² per sweep",
+     "title": "Charges mostly wander",
+     "tag": "measured",
+     "text": "A single charge diffuses 22 times faster than the loads. Its hops are slightly anti-persistent."
+    },
+    {
+     "value": "none",
+     "unit": "stable dilute state",
+     "title": "Charges do not survive",
+     "tag": "measured",
+     "text": "Below the creation threshold every seeded gas decays toward the charge-free state. Above it the gas is dense and structureless."
+    }
+   ]
+  },
+  {
+   "title": "Checks of the implementation",
+   "color": "#b197ff",
+   "blurb": "The runs execute law C exactly. The declared layers are listed with each dataset.",
+   "cards": [
+    {
+     "value": "1.32 × 10⁹",
+     "unit": "attempts, bit for bit",
+     "title": "GPU equals CPU at level 10",
+     "tag": "verified",
+     "text": "Two sweeps of the 21-million-observer universe give identical arrays on both backends."
+    },
+    {
+     "value": "19/60 … 7/12",
+     "unit": "five exact values",
+     "title": "One carrier against exact fractions",
+     "tag": "verified",
+     "text": "The compiled attempt body reproduces the exact single-carrier table of the theory session within 1.2 standard errors."
+    },
+    {
+     "value": "681",
+     "unit": "Lean files",
+     "title": "No open gaps in the proofs",
+     "tag": "scanned",
+     "text": "No sorry, no admit and no added axiom. Sixty files rely on compiled evaluation."
+    },
+    {
+     "value": "3",
+     "unit": "declared inputs",
+     "title": "Where every problem traces to",
+     "tag": "audit",
+     "text": "The theory repository marks the wiring, the schedule and the preparation as not selected by the model. Anisotropy comes from the wiring, the loss of waves from the schedule, the drift direction from the filling."
+    }
+   ]
+  }
+ ],
+ "runs_note": "Exact runs of law C from the same preparation rule. Levels 9 and 10 show a fixed sample of identities; all counts are exact."
+}

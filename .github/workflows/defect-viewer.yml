@@ -1,0 +1,37 @@
+name: Defect viewer and source records
+
+on:
+  push:
+    paths: ['oph_defects/**', 'oph_exact/carrier.py', 'oph_exact/federation.py', 'oph_fpe/core/**', 'oph_fpe/dynamics/self_readback_repair_closure.py', 'tests/test_defects*', 'tests/test_universe_run.py', 'tests/test_run_evidence.py', 'tests/test_exact_carrier.py', 'pyproject.toml', '.github/workflows/defect-viewer.yml']
+  pull_request:
+    paths: ['oph_defects/**', 'oph_exact/carrier.py', 'oph_exact/federation.py', 'oph_fpe/core/**', 'oph_fpe/dynamics/self_readback_repair_closure.py', 'tests/test_defects*', 'tests/test_universe_run.py', 'tests/test_run_evidence.py', 'tests/test_exact_carrier.py', 'pyproject.toml', '.github/workflows/defect-viewer.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  complete-records:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: python -m pip install '.[test]'
+      - run: python -m pytest -q tests/test_exact_carrier.py tests/test_defects_catalogue.py tests/test_universe_run.py tests/test_run_evidence.py tests/test_defects_viewer_services.py
+      - run: python -m oph_defects.bundle_research --check
+      - name: Check complete browser instruments and evidence
+        run: |
+          set -e
+          for check in oph_defects/viewer2/*_check.mjs; do
+            node "$check"
+          done

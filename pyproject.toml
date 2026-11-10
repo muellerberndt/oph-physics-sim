@@ -28,7 +28,10 @@ oph-fpe = "oph_fpe.cli:main"
 oph-string-vacuum = "oph_fpe.string_vacuum.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["oph_fpe*", "oph_universe*", "oph_fractional*"]
+include = ["oph_fpe*", "oph_exact*", "oph_universe*", "oph_fractional*", "oph_defects*"]
+
+[tool.setuptools.package-data]
+oph_defects = ["viewer/*", "viewer2/*", "viewer2/research/**/*.json", "references/*.json", "*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { familyReading, muonResidualPpm, FR_TWO_TICK, LEPTON_REFERENCE } from './lepton_reading.js';
+const source = JSON.parse(readFileSync(new URL('../../../repair-law/work/CODEX_JOIN_SPECTRUM/family_clock.json', import.meta.url)));
+const one = familyReading(2 / 9), exact = source.one_tick_squared_amplitude_spectrum;
+assert.ok(Math.abs(one.mu - Number(exact['m2/m1'])) < 1e-8);
+assert.ok(Math.abs(one.tau - Number(exact['m3/m1'])) < 1e-7);
+assert.ok(Math.abs(muonResidualPpm() - Number(source.comparison.mu_over_e_offset_ppm)) < 1e-6);
+assert.ok(Math.abs(LEPTON_REFERENCE.tauGeV / LEPTON_REFERENCE.electronGeV - Number(source.comparison.tau_over_e)) < 1e-9);
+assert.ok(Math.abs(one.Q - 2 / 3) < 1e-14);
+assert.ok(Math.abs(familyReading(Math.PI / 6).Q - 2 / 3) > 0.05, 'positive chamber is essential');
+const two = source.multi_tick.find((r) => r.ticks === 2);
+assert.equal(FR_TWO_TICK.mu, Number(two.squared_amplitude_ratios['m2/m1']));
+assert.equal(FR_TWO_TICK.tau, Number(two.squared_amplitude_ratios['m3/m1']));
+assert.ok(Math.abs(FR_TWO_TICK.compressionAmplitude - two.compression_eigenvalues[0][0]) < 1e-14);
+assert.ok(source.exact_instrument.physical_generations_from_characters === false);
+assert.ok(source.collision_clock.primary_Wilson_source_transfer === false);
+console.log('PASS: frozen source ratios, +9.83354 ppm, positivity chamber, and literal two-tick compression');

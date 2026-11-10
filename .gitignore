@@ -49,3 +49,7 @@ visualizer_handoffs/
 visualizer_bundles/
 
 # Empirical run outputs are retained locally or in external receipt archives.
+
+# Small authenticated viewer fixtures are shipped with the app.
+!oph_defects/viewer2/research/SIM/cf1/runs/
+!oph_defects/viewer2/research/SIM/cf1/runs/*.json

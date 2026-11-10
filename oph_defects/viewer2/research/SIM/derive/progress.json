@@ -1,0 +1,111 @@
+{
+ "updated": "2026-11-10 23:48",
+ "goal": "Source-derive every element of the particle lanes that is still declared, until the masses come out of the source.",
+ "lanes": [
+  {
+   "id": "E1, E2",
+   "what": "charged-lepton balance |b|/a = 1/sqrt2 and phase 2/9",
+   "who": "LNAT",
+   "state": "done, round 2",
+   "result": "Shape of e, mu, tau: Koide balance exact (|b|/a = 1/sqrt2 from the native weights 1/12 and 1/6) and phase 2/9. With the balance exact, the measured muon/electron ratio needs the phase 2/9 minus 0.79 parts per million, and then the tau comes out at 1776.969 MeV against 1776.93 +- 0.09. Exact theorem: no construction with algebraic entries gives a phase of exactly 2/9 rad, so the phase needs a Hamiltonian clock; the audit's declared clock has energies equal to the one-tick correction probabilities. Lane testing whether that clock turns 2/9 into the circulant phase. Field session's judgment: the radian route is admissible as a conditional derivation with two named premises, the area law's one nat per read and the Wick correspondence (each read carries one quantum of action); it is the same normalization as the energy clock. Leptons sit in class 3, whose flux phases are real, so their one-orientation readout must come from the screen's inside and outside; round 2 executes that. Round 2 (LNAT2): the face-defect route does not give the phase inside the coherent law. As Z6 link phases on a face, class k gives a circulant with a = 11/12, |b| = 1/60, arg b = pi k/9; the three copies split for classes 1, 2, 4, 5 and not for 0 or 3. With a fixed source endpoint, an orientation-odd readout and a Fourier analyzer across two objects, the operator is the Koide circulant (|b|/a = 1/sqrt2, Q = 2/3) with mean phase exactly 2/9 under one radian per read; then mu/e = 206.770316 (+9.83 ppm) and tau/e = 3477.4728 (+1.06 sigma). Two pieces are missing for a derivation: a definite or recorded source endpoint (the native partner load records it for 1/3 of active pairs) and the cross-object analyzer. Report: repair-law/reports/LNAT2.md. FR (theory): the coherent seam event swaps the seam parity with the owned record at all 60 addresses, so the record is the source endpoint read in the conjugate basis (EXACT; corrects LNAT2 D1). FR's generation register (two seam objects, neutral port register, oriented record) has a unitary 432-state tick whose one-tick compression is (sqrt2/3) C(theta), Q = 2/3 for every theta; read counts exact, P(R+ xor H) = 2/9; with theta = 2/9: mu/e 206.770316 (+9.83 ppm), tau/e 3477.4728, m_tau 1776.985 MeV from m_e. Declared there: register F, coupling T, oriented record V, analyzer, preparation, theta. DR: the -0.79 ppm dressing needs an even repair-branch phase of 1.29e-4 rad per tick; no pole shift gives it. LNAT3 running on the native status of F, T, V and the analyzer."
+  },
+  {
+   "id": "E3",
+   "what": "charged-lepton scale and the dressing of 2/9 to 0.22222476",
+   "who": "DA (field session)",
+   "state": "running",
+   "result": "One binary coin reading of the native seam event fixes amplitude and phase together: hold at one coin value, current at both, gives the Koide balance |b|/a = 1/sqrt2 and the probability 2/9 for each rotation branch paired with the hold. With the energy clock (energy = one-tick correction probability) Koide's form follows: Q = 2/3, mu/e 206.770, tau/e 3477.47; with the walk's own rest phase instead Q = 0.478, so the energy clock is the right one. Scale: needs the junction strength 0.0108 at v = 246.60 GeV; native weights 1/3, 5/18, 1/72, 1/128 fail; now computed as the 3 + 3 -> 0 junction probability in the audit's electroweak clock. Dressing: -0.79 ppm of the phase, the size of two-loop QED terms; not yet derived. LS2: the determinant law 6^-14/2 fits the leptons but predicts equal up, down and lepton determinants: excluded. TR (EXACT structure of the committed rule): from all 160 lasting (3,3) placements every one of the 60 proposals raises the cost (minimum +3), so a lasting lepton pair's junction is exactly zero; a class-3 face hops coherently at third order, t3 = (2/9) tau^3/epsilon^2, a class-1 face at first order; the lepton/quark weight ratio is linear in the weight of one unrewarded read, which the source does not supply; ten registered readings fail and all give up = down."
+  },
+  {
+   "id": "E4",
+   "what": "quark spreads and textures",
+   "who": "DF (field session)",
+   "state": "running",
+   "result": "DF2: all 30 readings of the quark junction fail; Z6-only laws give Y_u proportional to Y_d and V = 1 (u_R and d_R both class 4); native weights cap Q at 2/3. The quark lane needs a branch-magnitude law of the junction, x = p/q = 0.832 (up leg) and 0.622 (down leg) against the native 1/2; worker QM. D3 found no native source of these numbers in defect-bound modes (line masses give 0.01 to 0.33). QM: the bare seam junction gives (q, p, p) = (1/6, 1/12, 1/12), x = 1/2, for every colour, class and leg. QM2: with the seam record bit and the scalar as R8's two-member register, x_e = 1/2, x_d = 2/3 for every coefficient choice, x_u <= x_d (5/8 at the declared point); y_t/y_b comes out 0.22 to 1.30 against 59; V_CKM is the identity. Lead: a type-II two-doublet structure (up reads the occupied register, down and lepton the empty one) with an occupation ratio near 59, tied to the second doublet the slopes need. LS2: the lepton determinant law 6^-14/2 predicts equal quark determinants and is excluded; the measured |det Y_u|/|det Y_d| of 258 to 333 needs a label beyond Z6."
+  },
+  {
+   "id": "E5, E6, E7",
+   "what": "gauge packet, VEV attachment scale, criticality scale, law choice",
+   "who": "LEW",
+   "state": "done",
+   "result": "Chain (LEW): E_cell derived (DC); the gauge packet follows from P on the closure premises; SMDR gives W and Z; declared criticality gives H and t. With v attached at the top scale: W -0.0005 %, Z -0.03 %, H +0.36 %, t -0.27 %; attached at Q0: W -0.63 %, Z -0.66 %, H -0.23 %, t -0.87 %. The m_Z reading of the closure is retired (DC2): the route needs b_above = +8.5131 above M_U. Still declared: the slopes, b_above, R(P), the transmutation law, the v label, the criticality scale, E*, the Yukawa textures and the law choice. Report: repair-law/reports/LEW.md. LW: the source chart is unsliced (the hypercharge slice was target-informed and stood in for the radiative correction); v attaches through G_F; with SMDR: W 80.53911 (+0.220 %), Z 91.36191 (+0.191 %), H 125.84492, t 171.98782. SC: R(P) excluded as a source scale; transmutation law declared; colour bound b3 > -2.672. HT: no candidate derives the criticality scale; a finite class-3 register gives m_H 166 to 172 GeV (excluded)."
+  },
+  {
+   "id": "D10",
+   "what": "one-loop slopes and the scale forms behind P and alpha_U",
+   "who": "DB, DC (field session)",
+   "state": "running",
+   "result": "DC2: only the cut-scale coupling enters a cell closure; cut closure alone gives P* = 1.63748, 1/alpha(E_cell) = 16.2735; the hierarchy rests on one number, b_above = +8.5131. DB2: the clock period makes a pattern and its complement degenerate, so the source census between M_U and m_Z holds a boson partner for every Weyl multiplet; class 3 holds one lepton doublet and one boson doublet with the Higgs charges, per copy. DB3: three routes to gauginos closed; each copy is one family plus one Higgs doublet (three Higgs doublets for three copies). New lane EB: the screen gauge edge sectors give one-loop shifts (2.50, 4.17, 3.97) against the MSSM shift (2.50, 4.17, 4.00). DB3 (grading model): each copy is one SM family plus one Higgs doublet, so three Higgs doublets for three copies; the boson partners are a property of the source census, not observed particles. EB: the supplement's edge-sector triples are not reproducible (64 readings miss); with source items the shift is small and nearly universal, (0.28, 0.29, 0.21) at the cell and (1.69, 1.75, 1.62) at t_U, while the chain needs d(b1 - b2) = -5/3; the edge sectors are cell-scale electric states and belong to the matching. Edge-sector route excluded; the MSSM slopes stay declared (four source routes closed). In GL's E_cell frame every census hits an alpha_s Landau pole above m_Z. Next: BF (one-loop running of the source's truncated link register) and DC round 3 (observer-relative area law)."
+  },
+  {
+   "id": "E8",
+   "what": "neutrino mechanism and scale",
+   "who": "DG (field session)",
+   "state": "running",
+   "result": "DG2: both lepton junctions toggle s2; with R8 register both get the same rest phase, so y_nu/y_e = 1 from the source (Dirac at the electron mass, excluded). The lowest operator that tells nu from e has degree five and forces y_nu - y_e = 3 (y_d - y_u). Majorana through the Higgs memory is impossible at any order (B - L = 0). Codex: the neutral Higgs-lepton composite moves under the base Hamiltonian only at fifth order, A(t) = -(151/3840) t^5 + R_6; theory worker NU3 tests whether the neutrino gets its effective Hamiltonian only at fifth order. NU3 (EXACT): the fifth-order transfer splits by channel, <t_down|H^5|s_up> = -2i h^3 (31 y_e^2 + 60 y_d^2 + 60 y_u^2); it is a kinetic term (spin flip i sigma_x per hop along x) and the composite stays massless at every order, so suppressed hopping makes it slow, not light: the composite-suppression route for the neutrino mass is closed. The mass needs a neutrino-specific Dirac amplitude or a B - L-violating singlet register (DG). PM: with the charged-lepton structure alone the mixing matrix is a permutation (all angles zero, excluded); mixing needs a second lepton-family structure breaking the face third-turn and time reversal."
+  },
+  {
+   "id": "E9a",
+   "what": "three generations as modes bound to a winding-three defect of the mass field; hierarchy from overlaps",
+   "who": "D3",
+   "state": "done",
+   "result": "D3: CF-1 gives no three light generations of one handedness from a defect. A winding-n vortex binds exactly n modes of one handedness per cone, but all 32 cones bind, net handedness zero; with T3 member B, n modes per line, moving only along the line. No native field has winding three. Report: repair-law/reports/D3.md."
+  },
+  {
+   "id": "E9b",
+   "what": "three populations in the level-10 defect catalogue",
+   "who": "GEN",
+   "state": "done",
+   "result": "No three-way split of any defect class in 1,048 preregistered tests (Bonferroni corrected; frame types, pair kinds, partners, birth, moves, valence, ancestry). The only pass, lifetime, separates fates within one run (short contacts, ordinary contacts, survivors to the end), not three kinds. As expected if the generations are the three phases 1, w, w^2 of the third of a turn about the face axis: phases do not show as classical populations."
+  },
+  {
+   "id": "E9c",
+   "what": "mass matrix on the model's three-copy spaces and the Koide test",
+   "who": "KOI",
+   "state": "done",
+   "result": "KOI: on copy matrices built from the band and port operators, Q = 2/3 appears exactly only for rank-two matrices with a massless copy (delta = pi/12), and delta = 2/9 cannot enter a third-turn-covariant algebraic phase. The circulant from the coherent seam event's branch weights (agree 1/6, repair 1/12 + 1/12; DA3) has |b|/a = 1/sqrt2 exactly and Q = 2/3 for every delta; there delta = 2/9 needs the clock (one radian per read). Report: repair-law/reports/KOI.md."
+  },
+  {
+   "id": "audit",
+   "what": "every repository mass lane re-run and traced to its inputs",
+   "who": "MAUD",
+   "state": "done",
+   "result": "MAUD re-ran every agreeing mass row of the repository. Every particle mass reported as agreeing with measurement is computed from inputs that include measured values or coefficients chosen after the measured values were known. W and Z on the strict branch and the fine-structure constant from the closure are free of measured inputs, conditional on declared premises: the slopes (33/5, 1, -3), the M_U and E_cell forms, beta_EW = 4, the law choice and the m_Z reading of the pixel closure, which DC2 shows the source does not support. They differ from experiment by 0.04 % (W), 0.08 % (Z) and 0.03 % (alpha). These declared premises are the list this campaign derives. Report: repair-law/reports/MAUD.md."
+  },
+  {
+   "id": "E9d",
+   "what": "second index of the frame group as the generation",
+   "who": "D1",
+   "state": "done",
+   "result": "The second index created by fixing a frame is a sound three-copy label: the three copies are fixed subspaces of the port space, and the tick keeps them. No native function of the seam kernel gives a measured mass ratio: the hierarchy ratio log(m3/m2)/log(m2/m1) comes out 2.51, 0.40, 0.24, 4.14 or 0.18 for the natural functions, against 0.529 for the charged leptons. Mixing: two flux sectors (zero against a twisted even flux) give exactly the tri-bimaximal pattern, a known approximation to neutrino mixing, but its third angle is zero, 78 standard deviations from measurement; the CP invariant J vanishes except between third-turn eigenbases (1/(6 sqrt3), 1/(6 sqrt15))."
+  },
+  {
+   "id": "vacuum",
+   "what": "one cone per species, the vacuum, a chiral weak coupling",
+   "who": "T3",
+   "state": "done",
+   "result": "T3: no finite-range tick has a single chiral cone (net chirality at phase 0 equals that at phase pi, both equal the block degree, zero for finite range). Best local member B (phi = 5 pi/16) leaves exactly one Dirac cone per species, massless speed 0.556, vector-like. The cone copies are momentum-reflected images with the same charges and rest phase, not generations. Report: repair-law/reports/T3.md."
+  },
+  {
+   "id": "synergy",
+   "what": "the audit's interacting chiral source (quantum links, quantum Higgs memory, one Hamiltonian)",
+   "who": "Codex, read by all lanes",
+   "state": "running",
+   "result": "Unique neutral ground with a gap; charged thresholds 0.97009612853 in source units with the charged-lepton Yukawas set to one. Offered to LNAT as the Hamiltonian clock, to D3 as the field whose phase can wind, to DF and DG. Codex 11-10 (f21f461d5): Peter-Weyl links with 119 matrix-coefficient states; the neutral packet moves at fifth order without an added hopping term; family cell with all quark and lepton Yukawa channels on one quantum scalar (97,878 states, ground near -11.14102996); charge-compensated transport for all five matter representations; finite unitary clock with loop records."
+  },
+  {
+   "id": "hadrons",
+   "what": "the nucleon mass from the source",
+   "who": "DE (field session)",
+   "state": "running",
+   "result": "HD: m_h = c_h Lambda^(3), Lambda^(3) = 0.340 GeV from the D10 colour coupling (CONDITIONAL), c_h from lattice QCD (IMPORTED: c_N = 2.745(137), c_rho = 2.273(123)). Nucleon 933 +- 47 MeV, rho 773 +- 42 MeV; the lattice ratio reproduces experiment by construction, the source number tested is alpha_3(m_Z) = 0.11834 (lattice 0.1183). Pion, kaon, n - p open until the quark lane supplies m_ud, m_s, m_d - m_u. Crux: the source's own cut coupling puts hadrons at 1e4 to 1e15 GeV; H4 is cell-scale confinement (argued)."
+  },
+  {
+   "id": "continuum",
+   "what": "the observer field: continuum limit of the CF-1 tick",
+   "who": "this session",
+   "state": "done",
+   "result": "alpha_i = X_record sigma_i and beta = Y_record are Dirac matrices; two ticks in the half-step frame equal exp(-2i(alpha.p + theta beta)) up to O(p^3) (error ratio 7.99 per halving of p); so for long wavelengths the quantum obeys the Dirac equation with c = one cell per tick and m c^2 = hbar theta / tau. The executable lattice walk and the continuum field agree with fidelity 0.997 after 24 ticks for a 5-cell packet. Chirality gamma5 = X_record. Shown live in the Readout tab."
+  }
+ ]
+}

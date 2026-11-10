@@ -1,0 +1,97 @@
+{
+  "schema": "oph.viewer.research_reference_bundle.v1",
+  "scope": "Frozen reference artifacts. Their inclusion does not certify every claim or join them to the load run.",
+  "source_root_role": "repair-law/work",
+  "files": [
+    {
+      "source": "CODEX_JOIN_SPECTRUM/family_clock.json",
+      "sha256": "19c13eb2d47219f36e2422ad51e2fedb4021ccf2aa16de578f421c613a918e84",
+      "bytes": 20356
+    },
+    {
+      "source": "CODEX_JOIN_SPECTRUM/quantum_memory.json",
+      "sha256": "f3c4f2d1fa27fee44276123901534e2d15fabd70230c57b184670e58d52472e9",
+      "bytes": 41516
+    },
+    {
+      "source": "GL/s3_waves.json",
+      "sha256": "0932803dd75de9f4439d5234ffe8a6309cc30a1afcbc89a7602cd7ebcbcaa4dc",
+      "bytes": 6531
+    },
+    {
+      "source": "MAP/source_map.json",
+      "sha256": "f6a7cac730d29fb700895aedec5f425d86a45be7dcbd0c22253c2ea3b8dea94e",
+      "bytes": 11828
+    },
+    {
+      "source": "OM/obstruction_map.json",
+      "sha256": "28f25cf8ba2e09021ae27fe16080259cdf4154f358ec6a77cd2a19678ea60942",
+      "bytes": 465885
+    },
+    {
+      "source": "SIM/cf1/cf1_runs.json",
+      "sha256": "884798da464d0060611144faa369c3a0175873405576af3b1e8424a59b74dddc",
+      "bytes": 71881
+    },
+    {
+      "source": "SIM/cf1/runs/H2_coherence_48.json",
+      "sha256": "4d5e4e295452a6f8f791b7e48d729d8f53bc06acc15d0cc81333cf31dfded687",
+      "bytes": 9995
+    },
+    {
+      "source": "SIM/cf1/runs/H4_wilson_draws.json",
+      "sha256": "47054fc32680421d6ece920591e78a3392a065f3a52ff7e344acb82e312f1a4f",
+      "bytes": 55040
+    },
+    {
+      "source": "SIM/cf1/runs/MASS_CHECK.json",
+      "sha256": "86c32afeb1b8e9fbef5cda8ed66dade13e72b957977632a88f72164771fe8ea2",
+      "bytes": 9784
+    },
+    {
+      "source": "SIM/cf1/runs/R8_register_line.json",
+      "sha256": "bc098080734a76dbfd3f13cd3914d81150bad1cf85062f2006d5ea46e8d4e277",
+      "bytes": 91821
+    },
+    {
+      "source": "SIM/cf1/runs/V_validation_128.json",
+      "sha256": "47db4162f91157c82c37668a82bf3773f01e8ca2f9315a79b7ea38f93a6e50e5",
+      "bytes": 89957
+    },
+    {
+      "source": "SIM/cf1/runs/V_validation_256.json",
+      "sha256": "0e221ef0b2d7ecb139b8aa57f8bbb813f0f412d58b56e8a0d34779e7487ad874",
+      "bytes": 108643
+    },
+    {
+      "source": "SIM/cf1/runs/conformance.json",
+      "sha256": "371c17ff4fa28264f9767a469b829280885b7400c1b4a6d097b4261a52ac1287",
+      "bytes": 4820
+    },
+    {
+      "source": "SIM/derive/progress.json",
+      "sha256": "48f92f40ff21e967aa775f1f997ee854ae1e48d47a029f7960de1a5cb03529c4",
+      "bytes": 15698
+    },
+    {
+      "source": "SIM/derive/spectrum.json",
+      "sha256": "35b55e4fdcbfe8112daf5cddd63b0e7cbe96e818ec656d500c37ce7e60793bbd",
+      "bytes": 4685
+    },
+    {
+      "source": "T3/cones.json",
+      "sha256": "9ffb5092ecfd7e7b04bb2bf1fa0b531ebdc27943bc5fbba2d7927f8297480f5f",
+      "bytes": 76243
+    },
+    {
+      "source": "TR/tr_exact.json",
+      "sha256": "9edb86d5620c823d201adf315e3b64ee0271600927c0682e5f39742bd7d5dfe7",
+      "bytes": 9217
+    },
+    {
+      "source": "X5/bosons.json",
+      "sha256": "6dabfbc02212f91ae4cba11e9349134a76acd0249a04971fce11833678f3463f",
+      "bytes": 30767
+    }
+  ]
+}
