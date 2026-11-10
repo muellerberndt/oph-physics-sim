@@ -106,6 +106,12 @@ source receipts; `--check` verifies the saved table and every inherited source
 hash. Its charged energy bins, preparation error and separately costed reference
 are shown in source units. The card does not identify those transitions with a
 measured lepton or with the classical-run register.
+It also displays the physically prepared twenty-bit energy mean, without an
+extra ground projection, and the shared elementary/scalar–fermion spectral
+response. Both retain every failure and the supplied exact energy-bin service;
+the narrower mean does not relabel a single line as a mass. Check the exported
+data and hostile interpretation controls with
+`node oph_defects/viewer2/quantum_evidence_check.mjs`.
 
 The charged-field card follows a different, explicitly declared finite quantum
 source through energy acceptance to 26 joint position/field outcomes. Its graph

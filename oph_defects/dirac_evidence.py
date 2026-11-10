@@ -33,8 +33,8 @@ def build(root=None):
         raise ValueError('Preparation failures changed')
     eps=F(amp['complete_record_TV_to_exact_ground_example_upper'])
     trials=[]
-    for key,title in [('literal_zero_separation_control','No intervening wait'),
-                      ('literal_complete_active_circuit','A quarter-period wait')]:
+    for key,title in [('literal_zero_separation_control','One combined pulse'),
+                      ('literal_complete_active_circuit','Quarter-period pulse separation')]:
         circuit=d[key]; rows=[]
         for r in circuit['all_sixteen_records']:
             if key=='literal_zero_separation_control':

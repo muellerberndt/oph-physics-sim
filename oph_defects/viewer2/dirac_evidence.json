@@ -480,7 +480,7 @@
         }
       ],
       "sourceSeparation": "0",
-      "title": "No intervening wait"
+      "title": "One combined pulse"
     },
     {
       "records": [
@@ -870,7 +870,7 @@
         }
       ],
       "sourceSeparation": "pi/(2 Omega_a(p))",
-      "title": "A quarter-period wait"
+      "title": "Quarter-period pulse separation"
     }
   ]
 }

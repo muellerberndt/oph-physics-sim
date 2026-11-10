@@ -82,7 +82,7 @@ const DERIVED = [
   ['Native branch weights', 'Under the stated active-seam preparation, agreement and oriented repairs have weights 1/6, 1/12 and 1/12.'],
   ['Complete charged quantum records', 'The actual interacting eight-cell source has positive charge-compensated energy bins, including its reference cost and every complementary outcome. See the source table below.'],
   ['Complete packet detector', 'The separately prepared Dirac packet has a complete finite Born instrument, both energy-band outcomes, energy accounting and reproducible record export.'],
-  ['Controlled field comparison', 'The declared replicated native-block architecture has a controlled free Klein–Gordon limit; its finite collision experiments and actual source errors are explicit.'],
+  ['Controlled field comparisons', 'Complete native-block constructions give controlled free scalar, spin-one and spin-half record limits. Their actions and detectors are explicit; a common interacting chiral limit remains open.'],
 ];
 const CONDITIONAL = [
   ['Continuous gauge links', 'The full code-current algebra is S(U(3)×U(2)). Continuous port-phase controls, protection and a dynamical link register are explicit architectural choices; the passive run does not supply them.', 'GL'],
