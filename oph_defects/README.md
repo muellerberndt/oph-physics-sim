@@ -112,6 +112,20 @@ response. Both retain every failure and the supplied exact energy-bin service;
 the narrower mean does not relabel a single line as a mass. Check the exported
 data and hostile interpretation controls with
 `node oph_defects/viewer2/quantum_evidence_check.mjs`.
+The filtered elementary/composite states have a bound below `1.686e-7`
+on every common subsequent detector history, including depth-three
+preparation. Their different original success rates remain visible.
+A separate complete dressed-current experiment on the same native
+Hamiltonian has positive inelastic records and an energy-selected charged
+current insertion. The card keeps current backaction distinct from a
+weak-scattering or W-boson identification.
+
+The Map tab groups source centre classes beside compatible particle-family
+candidates. It distinguishes class addition from quantum scattering and
+quench counts from thermal abundances. Its internal representation matches
+one family’s gauge weights; it does not establish three generations or a
+required sterile neutrino. Direct links identify the audited candidate
+calculations and the empirical comparison conventions.
 
 The charged-field card follows a different, explicitly declared finite quantum
 source through energy acceptance to 26 joint position/field outcomes. Its graph

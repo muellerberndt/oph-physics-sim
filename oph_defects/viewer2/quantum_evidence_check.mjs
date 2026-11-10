@@ -16,4 +16,12 @@ for(const mutate of [x=>x.centroid.extraGroundProjection=true,x=>x.centroid.exac
  const changed=structuredClone(data);mutate(changed);assert.throws(()=>validateQuantumEvidence(changed));
 }
 const centroid=centroidHTML(data);assert.match(centroid,/41\.970618%/);assert.match(centroid,/0\.6916566792649/);assert.match(centroid,/No extra ground projection/);assert.match(centroid,/536,870,400/);
+for(const mutate of [x=>x.filteredState.exactGroundProjection=true,x=>x.filteredState.fullUnconditionedLawsEquated=true,x=>x.filteredState.interactingSMTransfer=true,x=>x.filteredState.commonSubsequentPolicyRequired=false,x=>x.filteredState.allPreparationRecordsRetained=false,x=>x.filteredState.sourceTrials=1,x=>x.filteredState.historyTVUpper.display=[0,0],x=>x.filteredState.originalCompositeSuccessLower.display=[0,0]]){
+ const changed=structuredClone(data);mutate(changed);assert.throws(()=>validateQuantumEvidence(changed));
+}
+assert.match(html,/every later detector/);assert.match(html,/31\.477352%/);assert.match(html,/3\.764603%/);assert.match(html,/does not equate the full unconditioned/);
+for(const mutate of [x=>x.weakResponse.exactGroundProjection=true,x=>x.weakResponse.physicalWeakCrossSection=true,x=>x.weakResponse.WParticleIdentified=true,x=>x.weakResponse.measurementCanChangeEnergy=false,x=>x.weakResponse.allFailuresAndPointerLabelsRetained=false,x=>x.weakResponse.currentRecords.pop(),x=>x.weakResponse.originalInelasticLower.display=[0,0]]){
+ const changed=structuredClone(data);mutate(changed);assert.throws(()=>validateQuantumEvidence(changed));
+}
+assert.match(html,/Does the quantum weak current respond/);assert.match(html,/original attempt/);assert.match(html,/can change the energy/);
 console.log('PASS: complete interacting energies; rejected free reference, missing outcome and mass promotion');

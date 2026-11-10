@@ -71,6 +71,34 @@ def build(root=DEFAULT_REPOSITORY):
             or not cc['prior_bin_admission_remains_explicit_spectral_service']
             or not cc['common_autonomous_Htotal_on_all_branches']):
         raise ValueError('Centroid source, clock or interpretation changed')
+    names['native_higgs_filtered_state']='model/native_higgs_filtered_state/results.json'
+    filtered=receipt(root,names['native_higgs_filtered_state'])
+    for name,expected in filtered['owned_source_sha256'].items():
+        target=(root/'model/native_higgs_filtered_state'/name).resolve()
+        if not target.is_relative_to(root) or digest(target)!=expected:
+            raise ValueError('Filtered-state implementation changed: '+name)
+    fs=filtered['filtered_state_settings'][0]; fp=filtered['physical_preparation']
+    if (fs['radius_in_units_of_360_lambda']!=2
+            or fs['implemented_bin_QPE_claimed']
+            or fs['unconditional_A_and_B_over_2_complete_laws_are_close_claimed']
+            or fp['exact_interacting_ground_projection_assumed']
+            or not filtered['complete_instruments']['every_fine_preparation_record_and_partner_retained']
+            or filtered['typed_free_Dirac_corollary']['interacting_native_Lorentz_or_SM_chirality_transfer']):
+        raise ValueError('Filtered-state service or interpretation changed')
+    names['native_weak_current_response']='model/native_weak_current_response/results.json'
+    weak=receipt(root,names['native_weak_current_response'])
+    for name in ('certificate.py','local.py','charged.py','bounds.py','PROOF.md'):
+        if 'model/native_weak_current_response/'+name not in weak['input_sha256']:
+            raise ValueError('Missing weak-current implementation custody: '+name)
+    wi=weak['finite_inelastic_experiment']; wc=weak['charged_current']
+    if (weak['actual_preparation']['exact_P0_added']
+            or not weak['source']['same_source_clock_on_all_branches']
+            or weak['scope']['weak_scattering_cross_section_or_SM_matching']
+            or weak['scope']['W_boson_or_Lorentz_vector_identified']
+            or wi['unknown_ground_energy_as_free_clock_phase']
+            or not wi['all_additional_pointer_labels_retained']
+            or not wc['current_measurement_changes_the_admitted_energy_distribution']):
+        raise ValueError('Weak-current source or ordered instrument changed')
     prep = source['interacting_ground_preparation']['preparation']
     filt = prep['finite_energy_agreement_filter']
     channels = source['interacting_charged_response']['same_H_interacting_channels']
@@ -96,6 +124,24 @@ def build(root=DEFAULT_REPOSITORY):
                            'scheduleTerms':str(filt['explicit_integer_M']),
                            'algebraicServicesDeclared':True,'efficientNativeCircuitExecuted':False},
             'channels':rows,'allFailuresRetained':True,
+            'weakResponse':{
+                'originalInelasticLower':bounds([wi['original_attempt_nonzero_phase_probability_lower']]*2),
+                'chargedConditionalMean':bounds(wc['actual_prepared_bin_conditional_W_mean_interval']),
+                'currentRecords':[{'value':str(row['W_value']),'preparedProbability':bounds(row['prepared_probability_interval'])}
+                                  for row in weak['ground_current']['five_complete_current_records']],
+                'allFailuresAndPointerLabelsRetained':True, 'sameSourceClock':True,
+                'orderedEnergyThenCurrent':True, 'measurementCanChangeEnergy':True,
+                'exactGroundProjection':False,'physicalWeakCrossSection':False,'WParticleIdentified':False},
+            'filteredState':{
+                'sourceEnergy':bounds(fs['excitation_enclosure_relative_actual_ground']),
+                'historyTVUpper':bounds([fs['actual_same_history_total_variation_upper']]*2),
+                'originalElementarySuccessLower':bounds([fs['unconditional_elementary_in_bin_probability_lower']]*2),
+                'originalCompositeSuccessLower':bounds([fs['unconditional_composite_B_over_2_in_bin_probability_lower']]*2),
+                'sourceTrials':fp['native_trial_copies'], 'filters':fp['agreement_filter_count'],
+                'allPreparationRecordsRetained':True, 'exactSpectralBinService':True,
+                'commonSubsequentPolicyRequired':True, 'conditionalSuccessComparison':True,
+                'exactGroundProjection':False, 'fullUnconditionedLawsEquated':False,
+                'compositeCanonicalOnAllOccupations':False, 'interactingSMTransfer':False},
             'centroid':{
                 'sourceEnergyMean':bounds(centroid['finite_clock_conditional_mean_source_excitation_interval']),
                 'decodedMean':bounds(centroid['finite_pointer_mean_decoded_source_energy_interval']),
