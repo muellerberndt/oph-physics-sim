@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {validateQuantumEvidence,higgsConnectionHTML,centroidHTML,higgsCurrentReadoutHTML,coupledReadoutHTML,wilsonMaxwellHTML,photonCutoffHTML,quarkReadoutHTML,quarkResponseHTML,coupledGroundHTML,localCurrentHTML,localCurrentReadoutHTML} from './quantum_evidence.js';
+import {validateQuantumEvidence,higgsConnectionHTML,centroidHTML,higgsCurrentReadoutHTML,coupledReadoutHTML,wilsonMaxwellHTML,photonCutoffHTML,quarkReadoutHTML,quarkResponseHTML,coupledGroundHTML,localCurrentHTML,localCurrentReadoutHTML,quarkHiggsHTML,groundRefinementHTML} from './quantum_evidence.js';
 const data=JSON.parse(readFileSync(new URL('./quantum_evidence.json',import.meta.url)));
 assert.equal(validateQuantumEvidence(data),data);
 for(const mutate of [x=>x.scope.sourceDerivedGeV=true,x=>x.channels[0].referenceEnergy='0',x=>x.channels[0].probabilities.outside.display=[0,0],x=>x.channels[0].massGeV=.000511,x=>x.channels[0].sourceEnergy.display=[1,0]]) {
@@ -80,9 +80,21 @@ assert.match(localCurrentReadoutHTML(data,'elementary'),/2\.474173%/);
 assert.match(localCurrentReadoutHTML(data,'composite'),/0\.295882%/);
 assert.equal((localCurrentReadoutHTML(data,'composite').match(/class="qe-current-row"/g)||[]).length,5);
 assert.throws(()=>localCurrentReadoutHTML(data,'opposite-charge'));
-for(const name of ['native_local_current_readout','native_wilson_maxwell_refinement','native_quark_response','native_wilson_maxwell_ground']){
+for(const name of ['native_local_current_readout','native_wilson_maxwell_refinement','native_quark_response','native_wilson_maxwell_ground','native_quark_higgs_join','native_wilson_maxwell_ground_refinement']){
  for(const key of ['path','sha256','proof']){
   const changed=structuredClone(data);changed.evidence[name][key]='unverified';assert.throws(()=>validateQuantumEvidence(changed));
  }
 }
 console.log('PASS: local uninterrupted current pointer, complete five outcomes, source clock and apparatus boundaries');
+for(const mutate of [x=>x.quarkHiggs.unconditionalLawsEquated=true,x=>x.quarkHiggs.settingLabelExcluded=false,x=>x.quarkHiggs.historyPolicyMayReadSetting=true,x=>x.quarkHiggs.leptonStateOrReferenceTransferred=true,x=>x.quarkHiggs.exactGroundProjection=true,x=>x.quarkHiggs.canonicalCompositeCAR=true,x=>x.quarkHiggs.quarkMassOrChiralityIdentified=true,x=>x.quarkHiggs.commonRetainedEnvironmentIncluded=false,x=>x.quarkHiggs.pumpSourceDuration=0,x=>x.quarkHiggs.referenceEnergy='0',x=>x.quarkHiggs.completeSettingLabels=6,x=>x.quarkHiggs.families[0].historyTVUpper.display=[0,0],x=>x.quarkHiggs.families[0].originalCompositeSuccessLower.display=[.49,.5],x=>x.quarkHiggs.families[0].originalInterferenceContrastLower.display=[0,0],x=>delete x.quarkHiggs.families[0].stateRecords[0].conditional.pump_failure,x=>x.quarkHiggs.families[0].stateRecords[0].originalFairSetting.bin_hit.display=[.9,1]]){
+ const changed=structuredClone(data);mutate(changed);assert.throws(()=>validateQuantumEvidence(changed));
+}
+const join=quarkHiggsHTML(data,'uc');assert.match(join,/49\.539773%/);assert.match(join,/7\.565370%/);assert.match(join,/9\.679697 percentage points/);assert.match(join,/exclude the different pump-setting labels/);assert.match(join,/two separate experiments with fair settings/);assert.match(join,/one source-time unit after the original two-source preparation/);
+assert.match(quarkHiggsHTML(data,'Q'),/7\.578057%/);assert.match(quarkHiggsHTML(data,'Q'),/9\.690780 percentage points/);assert.throws(()=>quarkHiggsHTML(data,'top'));
+for(const mutate of [x=>x.groundRefinement.distinctUniformPointerSetting=false,x=>x.groundRefinement.parentCap3RecordsUnchanged=false,x=>x.groundRefinement.heatTimeIsSourceClock=true,x=>x.groundRefinement.spatialOrUVContinuum=true,x=>x.groundRefinement.matricesEnumeratedOrFeasible=true,x=>x.groundRefinement.radiationOrSMIdentity=true,x=>x.groundRefinement.allFailuresAndNoopRecordsRetained=false,x=>x.groundRefinement.preparedCap='1024',x=>x.groundRefinement.preparedCapExponent=10,x=>x.groundRefinement.idealGroundCap=3,x=>x.groundRefinement.pointerM='157589952376326706',x=>x.groundRefinement.sourceTimeAfterCount=4,x=>x.groundRefinement.uniformPreparedCountLower.display=[0,0],x=>x.groundRefinement.preparedCountErrorUpper.display=[3e-9,3e-9],x=>x.groundRefinement.rawSourceNormAtPreparedCapUpper.display=[0,0],x=>x.groundRefinement.retainedCapacityNats.display=[Infinity,Infinity]]){
+ const changed=structuredClone(data);mutate(changed);assert.throws(()=>validateQuantumEvidence(changed));
+}
+const refinement=groundRefinementHTML(data);assert.match(refinement,/K = 1,024/);assert.match(refinement,/K = 2<sup>96<\/sup>/);assert.match(refinement,/0\.451023 per million/);assert.match(refinement,/99\.932485%/);assert.match(refinement,/315,179,904,752,653,412/);assert.match(refinement,/43,303\.775 nats/);assert.match(refinement,/five including the complete count readout/);assert.match(refinement,/not enumerated/);
+assert.equal(data.coupledGround.preparedStationaryCountLower.display[0]>1.41692e-6,true,'original cap-three count remains distinct');
+assert.equal(data.groundRefinement.preparedCountErrorUpper.display[1]>data.groundRefinement.idealGroundTwoTestErrorUpper.display[1],true);
+console.log('PASS: same-source quark/Higgs conditional histories and separate all-cap ground/preparation budgets');

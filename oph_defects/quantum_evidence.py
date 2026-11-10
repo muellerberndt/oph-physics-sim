@@ -205,6 +205,57 @@ def build(root=DEFAULT_REPOSITORY):
             'preparationSuccessLower':bounds([full['preparation_success_lower']]*2),
             'referenceEnergy':full['success_reference_energy'],'massGeV':None,
             'empiricalParticle':None})
+    names['native_quark_higgs_join']='model/native_quark_higgs_join/results.json'
+    qh=receipt(root,names['native_quark_higgs_join'])
+    qs=qh['same_source']; qa=qh['apparatus']; alignment=qh['normalized_admitted_states_and_histories']
+    if (qh['source_parent']!={names['native_quark_response']:digest(root/names['native_quark_response'])}
+            or qs['H']!='h_active+h_partner+4N_ref' or qs['additional_P0']
+            or not qs['original_physical_preparation'] or not qs['all_complements_and_failure_records_retained']
+            or qs['reference_cost_per_occupation']!=4
+            or qa['full_setting_pump_energy_labels']!=8
+            or qa['pump_source_duration']!=1 or qa['energy_source_duration']!=1
+            or not qa['full_source_clock_on_no_operation_branches']
+            or qa['efficient_native_gate_synthesis'] or qa['controller_synthesis_workspace_included']
+            or alignment['settings']!=['A','C/2'] or alignment['additional_P0']
+            or not alignment['original_two_source_preparation']
+            or alignment['pure_inequality_source_state_and_reference_transferred']
+            or alignment['unconditional_complete_laws_claimed_close']
+            or not qh['scope']['actual_shared_positive_spectral_bin_contribution']
+            or not qh['scope']['all_atomic_roots_and_zero_residues_retained']
+            or any(value for key,value in qh['scope'].items()if key not in
+                   ('actual_shared_positive_spectral_bin_contribution','all_atomic_roots_and_zero_residues_retained'))):
+        raise ValueError('Quark/Higgs source, preparation, clock or interpretation changed')
+    quark_higgs_rows=[]
+    for key in ('uc','dc','Q'):
+        state=alignment['rows'][key]; fringe=qh['full_interacting_interference_records'][key]
+        if (not state['source_and_common_retained_preparation_environment_included']
+                or state['different_classical_setting_label_in_compared_state']
+                or state['same_history_policy_may_read_pump_setting']
+                or state['original_pump_success_rates_equated']
+                or not state['all_preparation_failure_records_retained']
+                or state['complete_fair_setting_pump_energy_labels']!=8
+                or fringe['selector_equals_maximum_elementary_residue_selector']):
+            raise ValueError('Quark/Higgs conditional history domain changed')
+        if len(fringe['settings'])!=2 or any(row['failed_pump_energy_hit_probability']!='0'for row in fringe['settings']):
+            raise ValueError('Quark/Higgs complete interference labels changed')
+        states=[]
+        for channel in ('elementary','composite_B_over_2'):
+            law=state['complete_setting_records'][channel]
+            if law['failed_pump_energy_hit']!='0':raise ValueError('Quark/Higgs unused label changed')
+            states.append({'setting':channel,
+                'conditional':{name:bounds(pair)for name,pair in law['prepared_conditional'].items()},
+                'originalFairSetting':{name:bounds(pair)for name,pair in law['original_attempt_joint_fair_setting'].items()}})
+        quark_higgs_rows.append({'id':key,
+            'sourceEnergy':bounds(fringe['source_excitation_relative_actual_ground']),
+            'historyTVUpper':bounds([state['common_history_total_variation_upper']]*2),
+            'originalElementarySuccessLower':bounds([state['original_attempt_elementary_in_bin_probability_lower']]*2),
+            'originalCompositeSuccessLower':bounds([state['original_attempt_composite_B_over_2_in_bin_probability_lower']]*2),
+            'originalInterferenceContrastLower':bounds([fringe['original_attempt_joint_contrast_lower']]*2),
+            'stateRecords':states,
+            'interferenceRecords':[{'sign':row['sign'],
+                'conditional':{name:bounds(pair)for name,pair in row['prepared_conditional_records'].items()},
+                'originalFairSetting':{name:bounds(pair)for name,pair in row['original_attempt_joint_setting_records'].items()}}
+                for row in fringe['settings']]})
     names['native_wilson_maxwell_ground']='model/native_wilson_maxwell_ground/results.json'
     wg=receipt(root,names['native_wilson_maxwell_ground'])
     for name,expected in wg['owned_source_sha256'].items():
@@ -228,6 +279,35 @@ def build(root=DEFAULT_REPOSITORY):
             or wg['exact_macrocell_and_Gauss_completion_control']['counterterm_is_forced_by_primitive_repair_law']
             or wg['exact_macrocell_and_Gauss_completion_control']['preexisting_global_kinetic_current_guard_removed']):
         raise ValueError('Full-ground completion, preparation or interpretation changed')
+    names['native_wilson_maxwell_ground_refinement']='model/native_wilson_maxwell_ground_refinement/results.json'
+    gr=receipt(root,names['native_wilson_maxwell_ground_refinement'])
+    for name,expected in gr['owned_source_sha256'].items():
+        target=(root/'model/native_wilson_maxwell_ground_refinement'/name).resolve()
+        if not target.is_relative_to(root) or digest(target)!=expected:
+            raise ValueError('Ground refinement implementation changed: '+name)
+    family=gr['same_source_family']; clock=gr['fixed_complete_energy_clock']
+    ground_bounds=gr['uniform_ground_bounds_exact']; prepared=gr['constructive_complete_preparation_history']; ideal=gr['constructive_ideal_ground_history']
+    if (gr['parent_ground_sha256']!=digest(root/names['native_wilson_maxwell_ground'])
+            or gr['parent_photon_refinement_sha256']!=digest(root/names['native_wilson_maxwell_refinement'])
+            or family['changed_parameter']!='total photon cap only'
+            or family['photon_caps']!='every integer K>=3'
+            or not family['native_mass_reference_Gauss_density_current_and_clock_unchanged']
+            or family['spatial_volume_or_spacing_refinement']
+            or not clock['additional_apparatus_setting_relative_to_parent_K3_clock']
+            or clock['parent_clock_or_receipt_modified'] or clock['imaginary_heat_time_is_physical_clock']
+            or not clock['all_M_basis_records_and_all_noop_failure_branches_retained']
+            or not clock['same_pointer_alphabet_for_all_K_and_mathematical_comparison']
+            or clock['source_copies']!=4 or clock['filter_count']!=3
+            or clock['pointer_M']!=315179904752653412
+            or clock['source_elapsed_time_before_count']!='4, including one preparation and three filter slots'
+            or clock['source_elapsed_time_after_count']!='5, including final common source factor'
+            or prepared['K']!=2**96 or ideal['K']!=1024
+            or prepared['matrices_enumerated_or_resource_feasibility_claimed']
+            or ideal['actual_full_source_matrix_enumerated']
+            or not gr['boundaries']['fixed_cube_interacting_ground_and_complete_record_limit']
+            or any(value for key,value in gr['boundaries'].items()
+                   if key!='fixed_cube_interacting_ground_and_complete_record_limit')):
+        raise ValueError('Uniform ground source, separate apparatus, cutoff or scope changed')
     prep = source['interacting_ground_preparation']['preparation']
     filt = prep['finite_energy_agreement_filter']
     channels = source['interacting_charged_response']['same_H_interacting_channels']
@@ -253,6 +333,41 @@ def build(root=DEFAULT_REPOSITORY):
                            'scheduleTerms':str(filt['explicit_integer_M']),
                            'algebraicServicesDeclared':True,'efficientNativeCircuitExecuted':False},
             'channels':rows,'allFailuresRetained':True,
+            'quarkHiggs':{'families':quark_higgs_rows,
+                'sameSourceAndReference':True,'originalTwoSourcePreparation':True,
+                'commonRetainedEnvironmentIncluded':True,'conditionalAcceptedStates':True,
+                'settingLabelExcluded':True,'allFailuresAndComplementsRetained':True,
+                'unconditionalLawsEquated':False,'historyPolicyMayReadSetting':False,
+                'leptonStateOrReferenceTransferred':False,'exactGroundProjection':False,
+                'canonicalCompositeCAR':False,'quarkMassOrChiralityIdentified':False,
+                'completeSettingLabels':8,'potentiallyNonzeroLabels':6,
+                'pumpSourceDuration':qa['pump_source_duration'],'binSourceDuration':qa['energy_source_duration'],
+                'sourceClock':alignment['source_clock'],'referenceEnergy':'4',
+                'storageUpper':qa['retained_storage_upper'],'Mprep':str(qa['Mprep']),
+                'matrixPumpAndExactBinServicesDeclared':True,'efficientNativeCompilation':False},
+            'groundRefinement':{
+                'allCapsFrom':3,'sourceCopies':clock['source_copies'],'filters':clock['filter_count'],
+                'sameCompletedSourceFamily':True,'fixedSpatialCube':True,
+                'distinctUniformPointerSetting':True,'parentCap3RecordsUnchanged':True,
+                'allFailuresAndNoopRecordsRetained':True,
+                'matrixServicesDeclared':True,'heatTimeIsSourceClock':False,
+                'spatialOrUVContinuum':False,'matricesEnumeratedOrFeasible':False,'radiationOrSMIdentity':False,
+                'uniformFullGapLower':bounds([ground_bounds['uniform_full_physical_gap_lower']]*2),
+                'uniformPreparationSuccessLower':bounds([ground_bounds['uniform_complete_filter_tree_success_lower']]*2),
+                'uniformPreparedCountLower':bounds([ground_bounds['uniform_physical_preparation_and_T111_joint_probability_lower']]*2),
+                'uniformPreparationErrorUpper':bounds([ground_bounds['uniform_conditional_ground_trace_distance_upper']]*2),
+                'idealGroundCap':ideal['K'],
+                'idealGroundTwoTestErrorUpper':bounds([ground_bounds['ideal_ground_two_field_record_error_at_K1024_upper']]*2),
+                'preparedCapExponent':prepared['K_dyadic_exponent'],'preparedCap':str(prepared['K']),
+                'preparedCountErrorUpper':bounds([ground_bounds['fixed_pointer_complete_prep_and_count_error_upper']]*2),
+                'preparedTwoTestErrorUpper':bounds([ground_bounds['fixed_pointer_complete_prep_and_two_field_tests_error_upper']]*2),
+                'pointerM':str(clock['pointer_M']),'sourceTimeBeforeCount':4,'sourceTimeAfterCount':5,
+                'retainedCapacityNats':bounds(prepared['full_source_reference_trial_filter_capacity_nats_interval']),
+                'additionalCountPointerCapacity':prepared['additional_complete_count_pointer_capacity'],
+                'completeCountLabels':str(prepared['complete_count_alphabet_at_K']),
+                'rawSourceNormAtPreparedCapUpper':bounds([ground_bounds['all_cap_raw_H_norm_at_explicit_K_upper']]*2),
+                'durationOneControlNorm':prepared['each_duration_one_control_norm_upper'],
+                'grossPreparationWork':prepared['gross_preparation_tree_work_upper']},
             'localCurrent':{
                 'elementaryMean':bounds(lcr['current_means']['elementary_W_mean_interval']),
                 'compositeMean':bounds(lcr['current_means']['Higgs_composite_W_mean_interval']),
