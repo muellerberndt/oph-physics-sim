@@ -40,3 +40,13 @@ def test_public_science_cannot_be_changed_behind_valid_source_pins(monkeypatch):
 
 def test_generated_browser_data_matches_the_reviewed_sources():
     assert json.loads(viewer.OUTPUT.read_text()) == viewer.build()
+
+
+def test_charged_cluster_preserves_reference_and_physical_scope():
+    value = viewer.build()['charged']
+    assert value['rankPerCharge'] == 8 and value['speciesCount'] is None
+    assert value['records'] == str(2**53)
+    assert value['slots'] == 5 and value['completion'] == '23/2'
+    assert not value['continuousSpinProved'] and not value['restMassProved']
+    assert F(value['acceptance']['exact']) > F('0.56935668')
+    assert F(value['jointFidelity']['exact']) > F('0.99991834')

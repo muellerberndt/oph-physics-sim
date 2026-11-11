@@ -1,6 +1,6 @@
 const $ = id => document.getElementById(id);
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const sci = text => { const [m,e] = text.split('e'); return Number(e)===0?m:`${m} × 10<sup>${Number(e)}</sup>`; };
+const sci = text => { const [m,e] = text.split('e'); if(Number(e)<0&&Number(e)>=-3)return '0.'+'0'.repeat(-Number(e)-1)+m.replace('.','');return Number(e)===0?m:`${m} × 10<sup>${Number(e)}</sup>`; };
 const range = value => {
   const [lo,e]=value.lowerText.split('e'),[hi,f]=value.upperText.split('e');
   if(e===f)return Number(e)===0?`${lo}–${hi}`:`(${lo}–${hi}) × 10<sup>${Number(e)}</sup>`;
@@ -114,9 +114,31 @@ function interaction() {
   $('interaction-family').addEventListener('change',event=>{interactionFamily=event.target.value;interaction();$('interaction-family').focus();});
 }
 
+function charged() {
+  const r=data.charged;
+  $('charged').innerHTML=`<span class="tag">Charged finite cube · full reference and detector retained</span><h2 style="margin-top:16px">Resolve a charged cluster against the neutral ground.</h2>
+  <p>The first two free states are too close to their neighbours for the available interaction bound. Keeping the first eight gives an isolated low-energy cluster within each charge sector, Q = +1 and Q = −1. The source completion is explicitly changed to <b>${esc(r.completion)}</b>; the photon occupation cap is ${r.photonCap}.</p>
+  <div class="grid"><div>${svg({label:'Two sources are prepared together. An even fermionic pump charges one source while its reference compensates the charge. Separate complete clocks read the charged source and retained neutral partner.',body:`
+    <rect x="20" y="105" width="125" height="85" rx="12" fill="#14263c" stroke="#43e0ce"/><text x="82" y="138" text-anchor="middle" fill="#edf3ff" font-size="16">two sources</text><text x="82" y="164" text-anchor="middle" fill="#b3c2dc" font-size="13">all flags retained</text>
+    <path d="M145 130 L215 75 H315 M145 164 L215 235 H520" fill="none" stroke="#89b8ff" stroke-width="2"/>
+    <rect x="220" y="35" width="125" height="80" rx="12" fill="#14263c" stroke="#89b8ff"/><text x="282" y="68" text-anchor="middle" fill="#edf3ff" font-size="15">even charge pump</text><text x="282" y="93" text-anchor="middle" fill="#b3c2dc" font-size="13">Q = ±1, R = ∓1</text>
+    <path d="M345 75 H520" fill="none" stroke="#89b8ff" stroke-width="2"/>
+    <rect x="520" y="35" width="175" height="80" rx="12" fill="#14263c" stroke="#89b8ff"/><text x="607" y="67" text-anchor="middle" fill="#edf3ff" font-size="16">charged clock</text><text x="607" y="93" text-anchor="middle" fill="#b3c2dc" font-size="13">cluster window</text>
+    <rect x="520" y="195" width="175" height="80" rx="12" fill="#14263c" stroke="#43e0ce"/><text x="607" y="227" text-anchor="middle" fill="#edf3ff" font-size="16">neutral clock</text><text x="607" y="253" text-anchor="middle" fill="#b3c2dc" font-size="13">ground window</text>
+    <text x="315" y="158" text-anchor="middle" fill="#ffbd63" font-size="14">both success and failure branches stay</text>
+    <text x="320" y="258" text-anchor="middle" fill="#b3c2dc" font-size="14">retained neutral preparation partner</text>`})}
+  ${steps(['Record code admission','Record energy agreement','Pump with a fermionic pointer','Read charged energy','Read neutral energy'])}
+  <div class="equation">Echarged − Eground − 4<br>∈ [${range(r.transition)}] m</div>
+  <p class="explain">The subtraction removes the explicit reference register cost of 4. Coulomb and boundary-reference effects remain in the interval. It is not a rest-mass measurement. The two energy clocks target the charged cluster and the actual neutral ground of this same coupled finite Hamiltonian.</p></div>
+  <div>${metric('> '+sci(r.acceptance.lowerText),'Original probability of the accepted joint energy record')}${metric('> '+sci(r.jointFidelity.lowerText),'Conditional joint charged-cluster / neutral-ground fidelity')}${metric('> '+sci(r.gapLower.lowerText)+' m','Separation above the eight-state cluster, within one fixed charge sector')}
+  <p class="explain">The five driven service slots retain all 2⁵³ record labels, including zero-weight outcomes. The source, reference and pointer capacity is about ${r.capacity.display[0].toLocaleString(undefined,{maximumFractionDigits:1})} nats. Exact matrix control services are declared; synthesis workspace and an efficient passive local implementation remain separate.</p></div></div>
+  <div class="rows"><span>Charge conjugation</span><b class="yes">paired Q = ±1 code spectra</b><span>Central 2π action</span><b class="yes">odd fermion parity</b><span>Full spatial rotation and Lorentz spin</span><b class="open">not established</b><span>Eight states interpreted as eight particle species</span><b class="open">not inferred</b></div>
+  <p class="explain" style="margin-top:18px">The reference is fixed at a corner, which breaks full cubic rotation symmetry. Moving it far away while controlling charged records is a necessary spatial test. A finite charged cluster, its fermion parity and an energy interval are concrete progress toward a particle readout; the interacting dispersion and physical species assignment still need their own calculation.</p>`;
+}
+
 try {
   const response=await fetch('./field_records.json');if(!response.ok)throw Error(`Record data unavailable (${response.status})`);data=await response.json();
   if(data.schema!=='oph.viewer.field_records.v1'||data.scope.sourceDerivedMassesGeV.length||data.scope.physicalParticleIdentities.length)throw Error('Unreviewed record scope');
-  transfer();ground();cone();interaction();$('loading').hidden=true;showTab('transfer');
+  transfer();ground();cone();interaction();charged();$('loading').hidden=true;showTab('transfer');
   $('proofs').innerHTML=Object.entries(data.evidence).map(([name,e])=>`<div><a href="${esc(e.proof)}" target="_blank" rel="noopener">${esc(name.replaceAll('_',' '))} · proof</a><code>${esc(e.path)}<br>SHA256 ${esc(e.sha256)}<br>Original research receipt ${esc(e.researchSha256)}</code></div>`).join('');
 } catch(error) {$('loading').className='error';$('loading').textContent=error.message;}
