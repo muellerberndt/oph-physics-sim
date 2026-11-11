@@ -200,6 +200,7 @@ export function spectrumShown() {
   }
   $('sp-host').innerHTML = `
     <div class="sp-head"><h2>From obstruction to mass</h2>
+      <p><a href="./field-records.html">Open the finite field laboratory →</a> Follow transfer, energy measurement, ground preparation, propagation and a complete interaction record.</p>
       <p>Each row compares a candidate construction with an observed particle target. Centre classes, one-tick effects, Hamiltonian energy lines and calibrated GeV values are distinct steps. Click a row for its exact hypotheses and unresolved transfers. <a href="/rl/CODEX_JOIN_SPECTRUM/family_clock.json">Family instrument and clock evidence</a> · <a href="/rl/CODEX_JOIN_SPECTRUM/quantum_memory.json">same-H quantum memory evidence</a>.</p>
       <div class="sp-keys">${legend}<span class="sp-key"><i class="sp-tick"></i>measured</span><span class="sp-key"><i class="sp-ring"></i>unit</span></div></div>
     <div class="sp-flow">${flow.map((f, i) => `<div class="sp-fstep"><b>${i + 1} · ${f[0]}</b><span>${f[1]}</span></div>`).join('<div class="sp-farrow"></div>')}</div>
