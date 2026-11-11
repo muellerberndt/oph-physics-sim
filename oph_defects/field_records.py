@@ -13,7 +13,7 @@ OUTPUT = Path(__file__).parent / 'viewer2/field_records.json'
 NAMES = ('native_quark_spatial_spectrum', 'native_code_ground_preparation',
          'native_orthogonal_wilson_bridge', 'native_wilson_maxwell_spatial_family',
          'native_wilson_maxwell_interaction_witness', 'native_orthogonal_wilson_spatial_join',
-         'native_orthogonal_wilson_charged_band')
+         'native_orthogonal_wilson_charged_band', 'native_orthogonal_wilson_charged_spatial_records')
 BASE = 'model/field_record_addenda/'
 REVIEWED_RESEARCH = dict(zip(NAMES, (
     '4003848f71b6da04e54955ceffb4a81179b9c659fbff56d10661ee35f41613fc',
@@ -22,7 +22,8 @@ REVIEWED_RESEARCH = dict(zip(NAMES, (
     '3e413171f6ad1c0df6cc4db522cb67bc4d9f5f2ae1cfc80d3f4b92fac03538ed',
     'b8519b3f2464810d07b78ca90cad8f918007cdee6339f3f710ccefa4b26a8e87',
     '44ca365fd77c85e1d820d2c2563f42187576c025e551d186c9998ad2428c7bab',
-    '310d8d6b5a7491fc0088e011e45dffe02efee90c9838f220f6c99a13e58e411a')))
+    '310d8d6b5a7491fc0088e011e45dffe02efee90c9838f220f6c99a13e58e411a',
+    'cc118f50fb65c045894d74a122000e2d8fec521a7558f9d7eaec3f98563e22fc')))
 
 
 def scalar(value):
@@ -73,7 +74,7 @@ def load(root, name):
 def build(repository=None):
     root = Path(repository or theory_repository()).resolve()
     values = {name: load(root, name) for name in NAMES}
-    quark, prep, bridge, family, witness, revised, charged = (values[n] for n in NAMES)
+    quark, prep, bridge, family, witness, revised, charged, spatial_charge = (values[n] for n in NAMES)
     if (prep['source_changed'] or prep['boundaries']['physical_mass_or_particle_identity']
             or bridge['common_free_cone']['weak_chiral_Standard_Model_representation_constructed']
             or witness['actual_source_changed'] or witness['boundaries']['Lorentz_UV_or_particle_identity']
@@ -81,6 +82,8 @@ def build(repository=None):
             or charged['boundaries']['relativistic_rest_mass_or_SM_identity']
             or charged['exact_source_controls']['eight_states_identified_as_species_or_spin_multiplicity']
             or not charged['complete_instrument']['all_failure_and_unused_outcomes_retained']
+            or spatial_charge['source']['coupled_ground_input_or_spectral_threshold_claimed']
+            or spatial_charge['scope']['charged_ground_or_sharp_pole_or_relativistic_mass']
             or revised['separate_source_only_completion_option']['actual_ground_vector_or_internal_gap_or_volume_limit_proved']):
         raise ValueError('Source identity or physical scope changed')
     rows = []
@@ -143,6 +146,14 @@ def build(repository=None):
             'transition': interval(charged['reference_corrected_charged_transition_over_m']),
             'capacity': interval(charged['clock_and_capacity']['total_log_Hilbert_dimension_nats']),
             'speciesCount': None, 'continuousSpinProved': False, 'restMassProved': False},
+        'chargedSpatial': {'pumpSuccess': scalar(spatial_charge['packet_controls']['uniform_pump_success_lower']),
+            'preparedEnergy': interval(spatial_charge['prepared_energy']['reference_subtracted_limit_over_m']),
+            'densityImbalance': scalar(spatial_charge['complete_local_law']['limiting_complete_local_density_imbalance_lower']),
+            'densitySignalWait': spatial_charge['complete_local_law']['density_positive_signal_dimensionless_autonomous_wait'],
+            'capThreeEnergyError': scalar(spatial_charge['finite_photon_controls']['uniform_K3_energy_cutoff_error_over_m_upper']),
+            'referenceSelfEnergies': [dict(location=label,root=row['root'],energy=scalar(row['reference_self_energy_over_m_g_squared'])) for label,row in zip(('Corner','Face','Centre'),spatial_charge['heat_reference_controls']['finite_reference_self_energy_fixture'])],
+            'coupledGroundPrepared': False, 'restMassProved': False, 'rawSpectraReferenceIndependent': False,
+            'allFailuresRetained': spatial_charge['complete_local_law']['literal_photon_cap_and_all_assembly_pump_detector_failures_retained']},
         'scope': {'physicalParticleIdentities': [], 'sourceDerivedMassesGeV': [],
             'allFailuresRetained': True, 'finiteExactControlServicesDeclared': True,
             'sameAsClassicalLoadRun': False, 'interactingRelativisticLimit': False,

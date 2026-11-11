@@ -50,3 +50,13 @@ def test_charged_cluster_preserves_reference_and_physical_scope():
     assert not value['continuousSpinProved'] and not value['restMassProved']
     assert F(value['acceptance']['exact']) > F('0.56935668')
     assert F(value['jointFidelity']['exact']) > F('0.99991834')
+
+
+def test_charged_spatial_energy_is_a_prepared_state_comparison():
+    value = viewer.build()['chargedSpatial']
+    assert not value['coupledGroundPrepared'] and not value['restMassProved']
+    assert not value['rawSpectraReferenceIndependent']
+    assert value['densitySignalWait'] == '0'
+    assert F(value['pumpSuccess']['exact']) == F(11,20)
+    assert F(value['preparedEnergy']['exact'][0]) == F(8081,8192)
+    assert [row['energy']['exact'] for row in value['referenceSelfEnergies']] == ['29231/136080','829/6804','22/243']

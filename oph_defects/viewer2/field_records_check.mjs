@@ -41,7 +41,7 @@ assert.ok(le(data.interaction.completeLawSeparation.exact,data.revisedInteractio
 assert.equal(data.preparation[0].pointer,64);
 assert.equal(data.preparation[1].pointer,4096);
 assert.ok(le(data.preparation[1].groundError.exact,data.preparation[0].groundError.exact));
-assert.equal(Object.keys(data.evidence).length,7);
+assert.equal(Object.keys(data.evidence).length,8);
 assert.equal(data.charged.rankPerCharge,8);
 assert.equal(data.charged.speciesCount,null);
 assert.equal(data.charged.continuousSpinProved,false);
@@ -49,6 +49,13 @@ assert.equal(data.charged.restMassProved,false);
 assert.equal(data.charged.records,(2n**53n).toString());
 assert.ok(le('0.56935668',data.charged.acceptance.exact));
 assert.ok(le('0.99991834',data.charged.jointFidelity.exact));
+assert.equal(data.chargedSpatial.restMassProved,false);
+assert.equal(data.chargedSpatial.coupledGroundPrepared,false);
+assert.equal(data.chargedSpatial.rawSpectraReferenceIndependent,false);
+assert.equal(data.chargedSpatial.densitySignalWait,'0');
+assert.equal(data.chargedSpatial.pumpSuccess.exact,'11/20');
+assert.equal(data.chargedSpatial.preparedEnergy.exact[0],'8081/8192');
+assert.equal(data.chargedSpatial.referenceSelfEnergies.length,3);
 for(const record of Object.values(data.evidence)){
   assert.match(record.sha256,/^[a-f0-9]{64}$/);assert.match(record.researchSha256,/^[a-f0-9]{64}$/);
   assert.ok(record.path.startsWith('model/field_record_addenda/'));

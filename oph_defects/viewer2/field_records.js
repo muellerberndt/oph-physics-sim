@@ -136,9 +136,29 @@ function charged() {
   <p class="explain" style="margin-top:18px">The reference is fixed at a corner, which breaks full cubic rotation symmetry. Moving it far away while controlling charged records is a necessary spatial test. A finite charged cluster, its fermion parity and an energy interval are concrete progress toward a particle readout; the interacting dispersion and physical species assignment still need their own calculation.</p>`;
 }
 
+function boundary() {
+  const r=data.chargedSpatial;
+  $('boundary').innerHTML=`<span class="tag">A separate growing-box test · prepared charged state</span><h2 style="margin-top:16px">Which energy belongs to the charge—and which to its reference?</h2>
+  <p>A local creation or removal prepares charge on the free sea. The actual interacting Hamiltonian then governs the records. This input is nonstationary: the calculation here compares charged and neutral <b>preparations</b>, rather than their coupled ground energies.</p>
+  <div class="grid"><div>${svg({label:'A fixed observer measures a local charged packet while boxes and static compensating references are compared at increasing distances. This is a family of finite experiments, not motion of the reference inside one experiment.',body:`
+  <rect x="50" y="35" width="620" height="230" rx="18" fill="none" stroke="#506889" stroke-dasharray="6 6"/><rect x="145" y="65" width="430" height="170" rx="18" fill="none" stroke="#89b8ff"/><rect x="240" y="95" width="240" height="110" rx="18" fill="#12263c" stroke="#43e0ce"/>
+  <circle cx="360" cy="150" r="24" fill="#225447" stroke="#43e0ce"/><text x="360" y="156" text-anchor="middle" fill="#edf3ff" font-size="21">q</text><text x="360" y="191" text-anchor="middle" fill="#b3c2dc" font-size="13">local observer and packet</text>
+  <circle cx="82" cy="64" r="18" fill="#40303f" stroke="#f7a6c6"/><text x="82" y="70" text-anchor="middle" fill="#f7a6c6" font-size="17">−q</text><path d="M101 74 L285 125" stroke="#f7a6c6" stroke-dasharray="4 5"/><text x="135" y="28" fill="#f7a6c6" font-size="14">static compensating reference</text>
+  <text x="360" y="288" text-anchor="middle" fill="#b3c2dc" font-size="14">all boundaries recede; every finite member keeps its own reference</text>`})}
+  <div class="equation">ΔEprepared − 4 − ½ m g² G(root,root)<br>has a finite bulk limit</div>
+  <p class="explain">The subtraction reports known reference contributions; it does not change H. Exact quantum exchange cancels a term that a classical charge-density calculation would keep. Complete local gauge-invariant records become independent of a sufficiently distant reference. Raw finite charged spectra are not claimed to be reference-independent.</p></div>
+  <div>${metric('≥ '+sci(r.pumpSuccess.lowerText),'Conditional local pump success · assembly flags and pump failures retained')}${metric('≥ '+sci(r.preparedEnergy.lowerText)+' m','Lower bound on the reference-subtracted prepared energy limit')}${metric('≥ '+sci(r.densityImbalance.lowerText),'Complete limiting local density outcome imbalance, immediately after preparation (τ = 0)')}
+  <p class="explain">The density signal confirms a prepared local charge. It is not an interaction witness at arbitrary time. Positive-time local record convergence is a separate proved statement on this nonstationary input. Neither quantity is a rest mass.</p></div></div>
+  <h3 style="margin-top:22px">The reference has a real, geometry-dependent energy.</h3><p>These exact values come from the 27-vertex Neumann graph. Each option is a different static reference placement, not a moving reference in one run.</p>
+  <div class="controls"><label for="root-position">Reference position</label><select id="root-position">${r.referenceSelfEnergies.map((v,i)=>`<option value="${i}">${v.location}</option>`).join('')}</select></div><div id="root-energy" aria-live="polite"></div>
+  <p class="explain">To obtain a physical mass, the next calculation must compare the charged excitation to the same interacting vacuum and control its energy–momentum behaviour. A positive preparation cost alone does not provide that identification.</p>`;
+  const draw=()=>{const item=r.referenceSelfEnergies[Number($('root-position').value)];$('root-energy').innerHTML=metric(`${esc(item.energy.exact)} m g²`,`${item.location} reference self energy; coordinates (${item.root.join(', ')})`);};
+  $('root-position').addEventListener('change',draw);draw();
+}
+
 try {
   const response=await fetch('./field_records.json');if(!response.ok)throw Error(`Record data unavailable (${response.status})`);data=await response.json();
   if(data.schema!=='oph.viewer.field_records.v1'||data.scope.sourceDerivedMassesGeV.length||data.scope.physicalParticleIdentities.length)throw Error('Unreviewed record scope');
-  transfer();ground();cone();interaction();charged();$('loading').hidden=true;showTab('transfer');
+  transfer();ground();cone();interaction();charged();boundary();$('loading').hidden=true;showTab('transfer');
   $('proofs').innerHTML=Object.entries(data.evidence).map(([name,e])=>`<div><a href="${esc(e.proof)}" target="_blank" rel="noopener">${esc(name.replaceAll('_',' '))} · proof</a><code>${esc(e.path)}<br>SHA256 ${esc(e.sha256)}<br>Original research receipt ${esc(e.researchSha256)}</code></div>`).join('');
 } catch(error) {$('loading').className='error';$('loading').textContent=error.message;}

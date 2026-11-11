@@ -57,6 +57,87 @@
       "upperText": "2.3507115e+0"
     }
   },
+  "chargedSpatial": {
+    "allFailuresRetained": true,
+    "capThreeEnergyError": {
+      "display": 1.3727143514324755e-05,
+      "exact": "137271435143247556625921609782293202054662239250435323148905539011/10000000000000000000000000000000000000000000000000000000000000000000000",
+      "lowerText": "1.3727143e-5",
+      "upperText": "1.3727144e-5"
+    },
+    "coupledGroundPrepared": false,
+    "densityImbalance": {
+      "display": 0.075625,
+      "exact": "121/1600",
+      "lowerText": "7.5625000e-2",
+      "upperText": "7.5625000e-2"
+    },
+    "densitySignalWait": "0",
+    "preparedEnergy": {
+      "display": [
+        0.9864501953125,
+        10.0040283203125
+      ],
+      "exact": [
+        "8081/8192",
+        "81953/8192"
+      ],
+      "lowerText": "9.8645019e-1",
+      "upperText": "1.0004029e+1"
+    },
+    "pumpSuccess": {
+      "display": 0.55,
+      "exact": "11/20",
+      "lowerText": "5.5000000e-1",
+      "upperText": "5.5000000e-1"
+    },
+    "rawSpectraReferenceIndependent": false,
+    "referenceSelfEnergies": [
+      {
+        "energy": {
+          "display": 0.21480746619635507,
+          "exact": "29231/136080",
+          "lowerText": "2.1480746e-1",
+          "upperText": "2.1480747e-1"
+        },
+        "location": "Corner",
+        "root": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "energy": {
+          "display": 0.12184009406231629,
+          "exact": "829/6804",
+          "lowerText": "1.2184009e-1",
+          "upperText": "1.2184010e-1"
+        },
+        "location": "Face",
+        "root": [
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "energy": {
+          "display": 0.09053497942386832,
+          "exact": "22/243",
+          "lowerText": "9.0534979e-2",
+          "upperText": "9.0534980e-2"
+        },
+        "location": "Centre",
+        "root": [
+          1,
+          1,
+          1
+        ]
+      }
+    ],
+    "restMassProved": false
+  },
   "cone": {
     "completion": "21/2",
     "gapLower": {
@@ -104,43 +185,49 @@
       "path": "model/field_record_addenda/native_code_ground_preparation/results.json",
       "proof": "https://github.com/FloatingPragma/observer-patch-holography/blob/main/model/field_record_addenda/native_code_ground_preparation/PROOF.md",
       "researchSha256": "447b427480b303ed01cce3ac03fa56e0121c775e7cc17780dddba2976adce63e",
-      "sha256": "68bea9f4a43ed23c2ac0d20132f4c35ba5ca7aeb87829040cadd2a565f92d40c"
+      "sha256": "e301872e318fb001276a99ebf02c6a2afa9412f0567df89d50e895ec5ef64162"
     },
     "native_orthogonal_wilson_bridge": {
       "path": "model/field_record_addenda/native_orthogonal_wilson_bridge/results.json",
       "proof": "https://github.com/FloatingPragma/observer-patch-holography/blob/main/model/field_record_addenda/native_orthogonal_wilson_bridge/PROOF.md",
       "researchSha256": "75590a8e62090717d5b91ada6ac472498952c3b4ace19b15de815419ecdadc6c",
-      "sha256": "c9d084a5a1c8841c924f1f5d038f0c38bd9771d74c818c813105b9e94c22b6f1"
+      "sha256": "06ef91ab82793cdb6f91c0706ce52e4cb15bf35b0575fab9983ebfbc72805402"
     },
     "native_orthogonal_wilson_charged_band": {
       "path": "model/field_record_addenda/native_orthogonal_wilson_charged_band/results.json",
       "proof": "https://github.com/FloatingPragma/observer-patch-holography/blob/main/model/field_record_addenda/native_orthogonal_wilson_charged_band/PROOF.md",
       "researchSha256": "310d8d6b5a7491fc0088e011e45dffe02efee90c9838f220f6c99a13e58e411a",
-      "sha256": "1f608f85796d87e01c0cd9f062e0dd9c5235453bb37791f95bc0f6e4119bbace"
+      "sha256": "39ca5cedc3f4df074b2b54c21a0fb683b91ca3e08e93881dd55f3de8a3ac7151"
+    },
+    "native_orthogonal_wilson_charged_spatial_records": {
+      "path": "model/field_record_addenda/native_orthogonal_wilson_charged_spatial_records/results.json",
+      "proof": "https://github.com/FloatingPragma/observer-patch-holography/blob/main/model/field_record_addenda/native_orthogonal_wilson_charged_spatial_records/PROOF.md",
+      "researchSha256": "cc118f50fb65c045894d74a122000e2d8fec521a7558f9d7eaec3f98563e22fc",
+      "sha256": "8e144b798139546c927513855cdd6539e72b16fb94754b9411c11d3ccf1d6e54"
     },
     "native_orthogonal_wilson_spatial_join": {
       "path": "model/field_record_addenda/native_orthogonal_wilson_spatial_join/results.json",
       "proof": "https://github.com/FloatingPragma/observer-patch-holography/blob/main/model/field_record_addenda/native_orthogonal_wilson_spatial_join/PROOF.md",
       "researchSha256": "44ca365fd77c85e1d820d2c2563f42187576c025e551d186c9998ad2428c7bab",
-      "sha256": "9ee36aba72a038a9347a3139510f70b868c9e29b6dc4ee54cf218664242dfe61"
+      "sha256": "45afc48eddfbe284618d3248d6bb4c97e1fc7304c1301df3b78fa6a908e01a62"
     },
     "native_quark_spatial_spectrum": {
       "path": "model/field_record_addenda/native_quark_spatial_spectrum/results.json",
       "proof": "https://github.com/FloatingPragma/observer-patch-holography/blob/main/model/field_record_addenda/native_quark_spatial_spectrum/PROOF.md",
       "researchSha256": "4003848f71b6da04e54955ceffb4a81179b9c659fbff56d10661ee35f41613fc",
-      "sha256": "d9ca9c5ca544cf4e62e30c946b7f0337bf8c7c9006b81d0171c3ba83f1733e5b"
+      "sha256": "27060cc72b20387eb75a0536a0e25fef163f3f89efb6b72dedc742b0d20bc438"
     },
     "native_wilson_maxwell_interaction_witness": {
       "path": "model/field_record_addenda/native_wilson_maxwell_interaction_witness/results.json",
       "proof": "https://github.com/FloatingPragma/observer-patch-holography/blob/main/model/field_record_addenda/native_wilson_maxwell_interaction_witness/PROOF.md",
       "researchSha256": "b8519b3f2464810d07b78ca90cad8f918007cdee6339f3f710ccefa4b26a8e87",
-      "sha256": "281702caf92e1b2d3b5de24d865d69b3804ee8209160f89cf42d275b7f7aa680"
+      "sha256": "93a43d594c1ffc7f04b8ec7573a26e1bb9e6ac0e9c81a3bdc24b0b2176ec2a97"
     },
     "native_wilson_maxwell_spatial_family": {
       "path": "model/field_record_addenda/native_wilson_maxwell_spatial_family/results.json",
       "proof": "https://github.com/FloatingPragma/observer-patch-holography/blob/main/model/field_record_addenda/native_wilson_maxwell_spatial_family/PROOF.md",
       "researchSha256": "3e413171f6ad1c0df6cc4db522cb67bc4d9f5f2ae1cfc80d3f4b92fac03538ed",
-      "sha256": "f51fde74b91e7cf10b2d12e5293168e9ae9716eb65d5649e17bf5027f3814d49"
+      "sha256": "eff9d81ff7cced1838bc04c3d9c884aa5e60198f5454cacf337237a688f2d0d9"
     }
   },
   "interaction": {
